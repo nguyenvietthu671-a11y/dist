@@ -103,9 +103,10 @@ function App() {
           {stage === 'selfAssessment' && (
             <SelfAssessment onComplete={handleSelfAssessmentComplete} />
           )}
-          {stage === 'test' && assessmentData && (
+          {stage === 'test' && assessmentData && surveyAnswers && (
             <TestInterface
               formNumber={assessmentData.formNumber}
+              surveyAnswers={surveyAnswers}
               onComplete={handleTestComplete}
             />
           )}

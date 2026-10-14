@@ -234,21 +234,29 @@ export default function Results({ result, responses, onRestart }: ResultsProps) 
         >
           <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <span>📋</span> Your Responses
+              <span>📋</span> Your Responses (Speech-to-Text Transcripts)
             </h3>
             <div className="space-y-4">
-              {responses.map((response, i) => (
-                <div key={i} className="p-4 rounded-xl bg-slate-700/30 border border-slate-700/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-purple-400 font-medium">Question {i + 1}</span>
-                    <span className="text-xs text-gray-500">{response.duration}s</span>
+              {responses.map((response, i) => {
+                const wordCount = response.transcript.split(/\s+/).filter(w => w).length;
+                return (
+                  <div key={i} className="p-4 rounded-xl bg-slate-700/30 border border-slate-700/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-purple-400 font-medium">Question {i + 1}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-cyan-400">{wordCount} words</span>
+                        <span className="text-xs text-gray-500">{response.duration}s</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 text-xs mb-2 italic">Q: {response.question}</p>
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {response.transcript || <span className="text-amber-400 italic">(No speech detected - consider using text input for more accurate results)</span>}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-gray-500 text-xs mb-1 italic">Q: {response.question}</p>
-                  <p className="text-gray-300 text-sm">
-                    {response.transcript || <span className="text-amber-400 italic">(No speech detected)</span>}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </motion.div>
