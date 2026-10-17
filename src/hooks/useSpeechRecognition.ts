@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UseSpeechRecognitionReturn {
   transcript: string;
@@ -9,6 +9,7 @@ interface UseSpeechRecognitionReturn {
   resetTranscript: () => void;
   isSupported: boolean;
   error: string | null;
+  getFinalTranscript: () => string;
 }
 
 export function useSpeechRecognition(): UseSpeechRecognitionReturn {
@@ -22,6 +23,11 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Function to get current transcript (always returns latest value)
+  const getFinalTranscript = useCallback(() => {
+    return finalTranscriptRef.current;
+  }, []);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -64,7 +70,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
         setIsListening(false);
         shouldListenRef.current = false;
       } else if (event.error === 'no-speech') {
-        // No speech detected - this is normal, just continue
         setError(null);
       } else if (event.error === 'audio-capture') {
         setError('No microphone found. Please connect a microphone or use text input.');
@@ -78,7 +83,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     };
 
     recognition.onend = () => {
-      // Auto-restart if we should still be listening
       if (shouldListenRef.current) {
         try {
           recognition.start();
@@ -136,5 +140,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     resetTranscript,
     isSupported,
     error,
+    getFinalTranscript,
   };
 }

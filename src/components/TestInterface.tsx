@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from './Avatar';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
@@ -36,8 +36,9 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const currentQuestionRef = useRef<TestQuestion | null>(null);
   const currentQuestionIndexRef = useRef(-1);
   const manualTextRef = useRef('');
+  const useManualInputRef = useRef(false);
 
-  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
+  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported, getFinalTranscript } = useSpeechRecognition();
   const { speak: speakText, cancel: cancelSpeech, isSpeaking: ttsSpeaking, isSupported: ttsSupported } = useSpeechSynthesis();
 
   // Generate personalized questions based on survey answers
@@ -49,6 +50,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   useEffect(() => { responsesRef.current = responses; }, [responses]);
   useEffect(() => { currentQuestionRef.current = currentQuestion; currentQuestionIndexRef.current = currentQuestionIndex; }, [currentQuestion, currentQuestionIndex]);
   useEffect(() => { manualTextRef.current = manualText; }, [manualText]);
+  useEffect(() => { useManualInputRef.current = useManualInput; }, [useManualInput]);
 
   // Timer for question display countdown
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
         setRecordingTime(recordingTimeRef.current);
         
         if (recordingTimeRef.current >= currentQuestion.timeLimit) {
-          doStopRecording();
+          handleStopRecording();
         }
       }, 1000);
     }
@@ -146,13 +148,15 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
     }
   }, [ttsSpeaking, ttsSupported, phase]);
 
-  const doStopRecording = useCallback(() => {
+  const handleStopRecording = () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
 
-    if (!useManualInput) {
+    const isManualMode = useManualInputRef.current;
+
+    if (!isManualMode) {
       stopListening();
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
@@ -164,8 +168,10 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
     const qIndex = currentQuestionIndexRef.current;
     
     if (q) {
-      // Use manual text if available, otherwise use speech transcript
-      const finalTranscript = useManualInput ? manualTextRef.current : transcript;
+      // Get the latest transcript - use getFinalTranscript() for voice mode
+      const finalTranscript = isManualMode 
+        ? manualTextRef.current 
+        : getFinalTranscript();
       
       const audioBlob = audioChunksRef.current.length > 0 
         ? new Blob(audioChunksRef.current, { type: 'audio/webm' })
@@ -174,7 +180,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
       const response: TestResponse = {
         questionIndex: qIndex,
         question: q.prompt,
-        transcript: finalTranscript,
+        transcript: finalTranscript.trim(),
         audioBlob,
         duration: recordingTimeRef.current,
         timestamp: Date.now(),
@@ -185,10 +191,6 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
 
     setPhase('review');
     setShowTranscript(true);
-  }, [transcript, stopListening, useManualInput]);
-
-  const handleStopRecording = () => {
-    doStopRecording();
   };
 
   const handleNextQuestion = () => {
