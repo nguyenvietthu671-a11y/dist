@@ -497,17 +497,19 @@ const ALL_TOPICS = [
   'technology',     // technology
 ];
 
-// Select 3-4 topics from the pool for each test
-// Each selected topic will have 3-4 consecutive questions
-// Total: 1 warmup + (3-4 topics × 3-4 questions) = 12-15 questions
-function selectTopics(surveyAnswers: SurveyAnswers): string[] {
-  // Shuffle and pick 3-4 topics
+// Select 3-4 topics from the pool based on form level
+// Form 1: 3 topics, Form 2+: 4 topics
+function selectTopics(formNumber: number): string[] {
+  // Determine number of topics based on form level
+  const topicCount = formNumber >= 2 ? 4 : 3;
+  
+  // Shuffle and pick topics
   const shuffled = [...ALL_TOPICS].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, topicCount);
   
-  // Pick 3 or 4 topics randomly
-  const topicCount = Math.random() > 0.5 ? 4 : 3;
+  console.log(`📋 Selected ${topicCount} topics for Form ${formNumber}:`, selected);
   
-  return shuffled.slice(0, topicCount);
+  return selected;
 }
 
 // Validation function to ensure all questions come from the bank
@@ -534,31 +536,47 @@ function validateQuestionInBank(prompt: string, type: 'experience' | 'roleplay' 
 }
 
 // Generate personalized questions based on survey answers
-// Structure: 1 warmup + (3-4 topics × 3-4 questions each) = 12-15 questions total
+// Structure: 1 warmup + main questions = MAX 15 questions total
 export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, formNumber: number): TestQuestion[] {
   const questions: TestQuestion[] = [];
   let questionId = 1;
 
   // Select 3-4 topics from the pool
-  const selectedTopics = selectTopics(surveyAnswers);
+  const selectedTopics = selectTopics(formNumber);
   
   console.log('📋 Selected topics for this test:', selectedTopics);
-  console.log(`🎯 Structure: ${selectedTopics.length} topics × 3-4 questions each`);
+  console.log(`🎯 Target: MAX 14 main questions (total 15 with warmup)`);
 
-  // Each topic gets 3-4 consecutive questions
-  // For higher forms, use 4 questions per topic; for lower forms, use 3
-  const questionsPerTopic = formNumber >= 3 ? 4 : 3;
+  // Calculate questions per topic to ensure max 14 main questions
+  // Form 1: 3 topics × 3 questions = 9 main (total 10)
+  // Form 2: 4 topics × 3 questions = 12 main (total 13)
+  // Form 3+: 4 topics with mix of 3-4 questions = 14 main max (total 15)
+  
+  let questionsPerTopic: number[];
+  
+  if (formNumber >= 3) {
+    // Form 3+: 4 topics, distribute to get 14 total
+    // Pattern: 4, 4, 3, 3 = 14 questions
+    questionsPerTopic = [4, 4, 3, 3];
+  } else if (formNumber >= 2) {
+    // Form 2: 4 topics × 3 questions = 12
+    questionsPerTopic = [3, 3, 3, 3];
+  } else {
+    // Form 1: 3 topics × 3 questions = 9
+    questionsPerTopic = [3, 3, 3];
+  }
 
-  // For each topic, add 3-4 consecutive questions
-  selectedTopics.forEach((topicKey) => {
+  // For each topic, add consecutive questions
+  selectedTopics.forEach((topicKey, index) => {
     const thread = topicThreads[topicKey];
     if (!thread) {
       console.warn(`⚠️ Topic "${topicKey}" not found in question bank!`);
       return;
     }
 
-    // Take 3-4 consecutive questions from this topic
-    const threadQuestions = thread.questions.slice(0, questionsPerTopic);
+    // Get the number of questions for this topic
+    const questionCount = questionsPerTopic[index] || 3;
+    const threadQuestions = thread.questions.slice(0, questionCount);
 
     console.log(`📚 Topic "${thread.topic}": Adding ${threadQuestions.length} consecutive questions`);
 
@@ -579,6 +597,13 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
 
   console.log(`✅ Total main questions generated: ${questions.length}`);
   console.log(`📊 Total test questions: ${questions.length + 1} (1 warmup + ${questions.length} main)`);
+  
+  // Ensure we don't exceed 15 total (1 warmup + 14 main)
+  if (questions.length > 14) {
+    console.warn(`⚠️ WARNING: Generated ${questions.length} main questions, but max is 14!`);
+    console.warn(`⚠️ Truncating to 14 questions...`);
+    questions.splice(14);
+  }
   
   // Final validation - ensure all questions are from the bank
   const allValid = questions.every(q => validateQuestionInBank(q.prompt, q.type));

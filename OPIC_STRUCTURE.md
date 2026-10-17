@@ -2,9 +2,9 @@
 
 ## ✅ Cấu trúc mới (Đúng chuẩn OPIc)
 
-### Tổng số câu hỏi: **10-17 câu**
-- **1 câu warm-up** (khởi động)
-- **9-16 câu chính** (từ 3-4 topics được chọn)
+### Tổng số câu hỏi: **10-15 câu** (MAX 15)
+- **1 câu warm-up** (khởi động) - LUÔN LÀ "Tell me about yourself"
+- **9-14 câu chính** (từ 3-4 topics được chọn)
 - **Mỗi topic có 3-4 câu hỏi liên tiếp**
 
 ---
@@ -42,14 +42,14 @@
 - Tổng: 1 warmup + (3 × 3) = **10 câu**
 
 **Form 2 (Novice Low - Intermediate High):**
-- Chọn: 3-4 topics (random)
+- Chọn: 4 topics
 - Mỗi topic: 3 câu liên tiếp
-- Tổng: 1 warmup + (3-4 × 3) = **10-13 câu**
+- Tổng: 1 warmup + (4 × 3) = **13 câu**
 
 **Form 3+ (Advanced Low):**
 - Chọn: 4 topics
-- Mỗi topic: 4 câu liên tiếp
-- Tổng: 1 warmup + (4 × 4) = **17 câu**
+- Phân bổ: 2 topics × 4 câu + 2 topics × 3 câu
+- Tổng: 1 warmup + (4+4+3+3) = **15 câu** (MAX)
 
 ---
 
@@ -70,19 +70,17 @@
 8. [Furniture] Tell me about the furniture you had at home when you were a child. (120s)
 9. [Furniture] Tell me about a time when you had a problem with your furniture. (120s)
 
-=== TOPIC 3: Housing (4 câu liên tiếp) ===
+=== TOPIC 3: Housing (3 câu liên tiếp) ===
 10. [Housing] I would like to know where you live. Can you describe your home to me? (120s)
 11. [Housing] What is your normal routine at home? (120s)
 12. [Housing] Describe the home you lived in as a child. (120s)
-13. [Housing] Talk about the different rooms in your home. (120s)
 
-=== TOPIC 4: Music (4 câu liên tiếp) ===
-14. [Music] What kinds of music do you listen to? (120s)
-15. [Music] When and where do you usually listen to music? (120s)
-16. [Music] When did you first become interested in music? (120s)
-17. [Music] Could you think back to a particular memorable time when you heard live music? (120s)
+=== TOPIC 4: Music (3 câu liên tiếp) ===
+13. [Music] What kinds of music do you listen to? (120s)
+14. [Music] When and where do you usually listen to music? (120s)
+15. [Music] When did you first become interested in music? (120s)
 
-Tổng: 17 câu (1 warmup + 16 main từ 4 topics × 4 câu)
+Tổng: 15 câu (1 warmup + 14 main từ 4 topics: 2×4 + 2×3)
 ```
 
 ---
@@ -222,8 +220,8 @@ Mở DevTools (F12) → Console tab → Bắt đầu test → Xem logs
 
 ### Method 2: Đếm thủ công
 - Đếm số câu hỏi trong bài test
-- Kiểm tra có đúng 12-15 câu không
-- Kiểm tra có 7 topics không
+- Kiểm tra có đúng 10-15 câu không (MAX 15)
+- Kiểm tra có 3-4 topics không
 
 ### Method 3: Visual Check
 - Xem badge loại câu hỏi
@@ -235,10 +233,10 @@ Mở DevTools (F12) → Console tab → Bắt đầu test → Xem logs
 ## 📝 Tổng kết
 
 ### Cấu trúc bài thi OPIc chuẩn:
-✅ **1 warm-up question**  
+✅ **1 warm-up question** - LUÔN LÀ "Tell me about yourself"  
 ✅ **3-4 topics được chọn ngẫu nhiên** từ pool 7 topics  
 ✅ **Mỗi topic có 3-4 câu hỏi liên tiếp**  
-✅ **Tổng: 10-17 câu** (tùy form level)  
+✅ **Tổng: 10-15 câu** (MAX 15, tùy form level)  
 
 ### 7 Topics trong pool (chọn 3-4):
 1. Geography (Domestic Travel)
@@ -250,21 +248,23 @@ Mở DevTools (F12) → Console tab → Bắt đầu test → Xem logs
 7. Technology
 
 ### Phân bổ theo Form Level:
-- **Form 1**: 3 topics × 3 câu = 10 câu tổng
-- **Form 2**: 3-4 topics × 3 câu = 10-13 câu tổng
-- **Form 3+**: 4 topics × 4 câu = 17 câu tổng
+- **Form 1**: 3 topics × 3 câu = **10 câu tổng**
+- **Form 2**: 4 topics × 3 câu = **13 câu tổng**
+- **Form 3+**: 4 topics (2×4 + 2×3) = **15 câu tổng** (MAX)
 
 ### Time limits:
 - Warm-up: 60 giây
 - Main questions: 90-120 giây (tùy form)
 
 ### Đặc điểm quan trọng:
+- Warm-up LUÔN LÀ "Tell me about yourself"
 - Các câu hỏi trong cùng topic được hỏi **liên tiếp** (không xen kẽ)
 - Topics được chọn **ngẫu nhiên** mỗi lần test
 - Không có role-play scenarios (đã loại bỏ)
+- **MAX 15 câu** cho tất cả form levels
 
 ---
 
 **Status**: ✅ Hoàn tất và đã test  
 **Last Updated**: 2026  
-**Total Questions per Test**: 10-17 câu (tùy form)
+**Total Questions per Test**: 10-15 câu (MAX 15, tùy form)
