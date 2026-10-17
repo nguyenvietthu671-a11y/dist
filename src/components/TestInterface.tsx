@@ -373,7 +373,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
           )}
           
           {/* End Test Button */}
-          {phase !== 'intro' && phase !== 'review' && responses.length > 0 && (
+          {phase !== 'intro' && phase !== 'review' && currentQuestionIndex >= 0 && (
             <button
               onClick={() => setShowEndTestModal(true)}
               className="px-3 py-1 rounded-full text-xs border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
