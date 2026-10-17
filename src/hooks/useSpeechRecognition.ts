@@ -95,34 +95,48 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     };
 
     recognition.onend = () => {
-      console.log(`🎤 Recognition session ended (restart count: ${restartCountRef.current})`);
+      console.log(`🎤 Recognition session ended (restart count: ${restartCountRef.current}, current transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words)`);
       
       if (shouldListenRef.current) {
         restartCountRef.current += 1;
         
         // Small delay before restart to avoid race conditions
         setTimeout(() => {
-          if (shouldListenRef.current && recognitionRef.current) {
+          if (shouldListenRef.current) {
             try {
-              console.log(`🎤 Restarting recognition session #${restartCountRef.current}...`);
-              recognitionRef.current.start();
+              // Try to restart the same instance
+              if (recognitionRef.current) {
+                console.log(`🎤 Restarting recognition session #${restartCountRef.current}... (keeping transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words)`);
+                recognitionRef.current.start();
+              } else {
+                throw new Error('Recognition instance is null');
+              }
             } catch (e) {
               console.error('❌ Failed to restart speech recognition:', e);
-              // Try creating a new recognition instance
-              try {
-                const newRecognition = createRecognition();
-                if (newRecognition) {
-                  recognitionRef.current = newRecognition;
+              console.log('🔄 Creating new recognition instance...');
+              
+              // Create a new recognition instance
+              // IMPORTANT: Don't reset finalTranscriptRef - keep the accumulated transcript!
+              const currentTranscript = finalTranscriptRef.current;
+              const newRecognition = createRecognition();
+              if (newRecognition) {
+                recognitionRef.current = newRecognition;
+                try {
                   newRecognition.start();
-                  console.log('✅ Created new recognition instance and started');
+                  // Sync transcript state to ensure UI shows the preserved transcript
+                  setTranscript(currentTranscript.trim());
+                  console.log(`✅ Created and started new recognition instance (transcript preserved: ${currentTranscript.trim().split(/\s+/).length} words)`);
+                } catch (e2) {
+                  console.error('❌ Failed to start new recognition:', e2);
+                  setIsListening(false);
                 }
-              } catch (e2) {
-                console.error('❌ Failed to create new recognition:', e2);
+              } else {
+                console.error('❌ Failed to create new recognition instance');
                 setIsListening(false);
               }
             }
           }
-        }, 100);
+        }, 200); // Increased delay to 200ms for better stability
       } else {
         setIsListening(false);
       }
