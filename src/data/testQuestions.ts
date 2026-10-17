@@ -486,21 +486,28 @@ const roleplayScenarios: { prompt: string; type: 'roleplay' }[] = [
   { prompt: "You had a car accident and are late for a party. Give alternatives.", type: 'roleplay' },
 ];
 
-// Determine which topics to use based on survey answers
-// Focus on user's requested topics: domestic travel, furniture, housing, music, movies, family, technology
-function selectTopics(surveyAnswers: SurveyAnswers): string[] {
-  // Core topics that user wants to focus on
-  const coreTopics = [
-    'geography',      // domestic travel
-    'furniture',      // furniture
-    'housing',        // housing
-    'music',          // music
-    'movies',         // movies
-    'familyFriends',  // family
-    'technology',     // technology
-  ];
+// Pool of all available topics (user's focus areas)
+const ALL_TOPICS = [
+  'geography',      // domestic travel
+  'furniture',      // furniture
+  'housing',        // housing
+  'music',          // music
+  'movies',         // movies
+  'familyFriends',  // family
+  'technology',     // technology
+];
 
-  return coreTopics;
+// Select 3-4 topics from the pool for each test
+// Each selected topic will have 3-4 consecutive questions
+// Total: 1 warmup + (3-4 topics × 3-4 questions) = 12-15 questions
+function selectTopics(surveyAnswers: SurveyAnswers): string[] {
+  // Shuffle and pick 3-4 topics
+  const shuffled = [...ALL_TOPICS].sort(() => Math.random() - 0.5);
+  
+  // Pick 3 or 4 topics randomly
+  const topicCount = Math.random() > 0.5 ? 4 : 3;
+  
+  return shuffled.slice(0, topicCount);
 }
 
 // Validation function to ensure all questions come from the bank
@@ -527,38 +534,33 @@ function validateQuestionInBank(prompt: string, type: 'experience' | 'roleplay' 
 }
 
 // Generate personalized questions based on survey answers
-// Total: 12-15 questions (1 warmup + 11-14 main questions)
+// Structure: 1 warmup + (3-4 topics × 3-4 questions each) = 12-15 questions total
 export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, formNumber: number): TestQuestion[] {
   const questions: TestQuestion[] = [];
   let questionId = 1;
 
-  // Select topics based on survey (7 core topics)
+  // Select 3-4 topics from the pool
   const selectedTopics = selectTopics(surveyAnswers);
   
   console.log('📋 Selected topics for this test:', selectedTopics);
-  console.log('🎯 Target: 11-14 main questions from 7 topics');
+  console.log(`🎯 Structure: ${selectedTopics.length} topics × 3-4 questions each`);
 
-  // Calculate questions per topic to reach 11-14 total
-  // 7 topics, need 11-14 questions total
-  // Distribution: 2 questions per topic = 14 questions (or some topics get 1)
-  const targetTotal = formNumber >= 3 ? 14 : formNumber >= 2 ? 13 : 11;
-  const questionsPerTopic = Math.floor(targetTotal / selectedTopics.length); // 1-2 per topic
-  const remainder = targetTotal % selectedTopics.length;
+  // Each topic gets 3-4 consecutive questions
+  // For higher forms, use 4 questions per topic; for lower forms, use 3
+  const questionsPerTopic = formNumber >= 3 ? 4 : 3;
 
-  // For each topic, add 1-2 questions from the topic thread
-  selectedTopics.forEach((topicKey, index) => {
+  // For each topic, add 3-4 consecutive questions
+  selectedTopics.forEach((topicKey) => {
     const thread = topicThreads[topicKey];
     if (!thread) {
       console.warn(`⚠️ Topic "${topicKey}" not found in question bank!`);
       return;
     }
 
-    // Determine how many questions from this topic
-    // Some topics get +1 if there's remainder
-    const questionCount = index < remainder ? questionsPerTopic + 1 : questionsPerTopic;
-    const threadQuestions = thread.questions.slice(0, questionCount);
+    // Take 3-4 consecutive questions from this topic
+    const threadQuestions = thread.questions.slice(0, questionsPerTopic);
 
-    console.log(`📚 Topic "${thread.topic}": Adding ${threadQuestions.length} questions`);
+    console.log(`📚 Topic "${thread.topic}": Adding ${threadQuestions.length} consecutive questions`);
 
     threadQuestions.forEach((q, idx) => {
       // Validate question is in the bank
@@ -574,33 +576,6 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
       });
     });
   });
-
-  // Add 1-2 role-play scenarios if we have room (to reach 12-15 total)
-  const currentTotal = questions.length;
-  const maxTotal = 15;
-  const roleplayCount = Math.min(2, maxTotal - currentTotal);
-  
-  if (roleplayCount > 0 && formNumber >= 2) {
-    const selectedRoleplays = roleplayScenarios
-      .sort(() => Math.random() - 0.5)
-      .slice(0, roleplayCount);
-
-    console.log(`🎭 Adding ${selectedRoleplays.length} role-play scenarios`);
-
-    selectedRoleplays.forEach(rp => {
-      // Validate role-play is in the bank
-      if (!validateQuestionInBank(rp.prompt, 'roleplay')) {
-        console.error(`❌ Role-play not found in bank: "${rp.prompt}"`);
-      }
-      
-      questions.push({
-        id: `q${questionId++}`,
-        prompt: rp.prompt,
-        type: 'roleplay',
-        timeLimit: formNumber >= 3 ? 120 : 90,
-      });
-    });
-  }
 
   console.log(`✅ Total main questions generated: ${questions.length}`);
   console.log(`📊 Total test questions: ${questions.length + 1} (1 warmup + ${questions.length} main)`);

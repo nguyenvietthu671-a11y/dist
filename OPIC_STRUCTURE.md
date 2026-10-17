@@ -2,10 +2,10 @@
 
 ## ✅ Cấu trúc mới (Đúng chuẩn OPIc)
 
-### Tổng số câu hỏi: **12-15 câu**
+### Tổng số câu hỏi: **10-17 câu**
 - **1 câu warm-up** (khởi động)
-- **11-14 câu chính** (từ 7 topics)
-- **0-2 câu role-play** (tùy form level)
+- **9-16 câu chính** (từ 3-4 topics được chọn)
+- **Mỗi topic có 3-4 câu hỏi liên tiếp**
 
 ---
 
@@ -18,33 +18,38 @@
 - Thời gian: 60 giây
 - Mục đích: Làm quen với Ava
 
-### 2. Main Questions (11-14 câu từ 7 topics)
+### 2. Main Questions (từ 3-4 topics, mỗi topic 3-4 câu)
 
-#### 7 Topics chính (User focus):
-1. **Geography** (Domestic Travel) - 1-2 câu
-2. **Furniture** - 1-2 câu
-3. **Housing** - 1-2 câu
-4. **Music** - 1-2 câu
-5. **Movies** - 1-2 câu
-6. **Family/Friends** - 1-2 câu
-7. **Technology** - 1-2 câu
+#### 7 Topics trong pool (chọn ngẫu nhiên 3-4 topics):
+1. **Geography** (Domestic Travel)
+2. **Furniture**
+3. **Housing**
+4. **Music**
+5. **Movies**
+6. **Family/Friends**
+7. **Technology**
+
+#### Cấu trúc bài thi:
+- **Chọn ngẫu nhiên 3-4 topics** từ pool 7 topics
+- **Mỗi topic có 3-4 câu hỏi liên tiếp**
+- Các câu hỏi trong cùng topic được hỏi liên tiếp (không xen kẽ)
 
 #### Phân bổ theo Form Level:
 
 **Form 1 (Novice Low - Intermediate Low):**
-- Tổng: 12 câu (1 warmup + 11 main)
-- Mỗi topic: 1-2 câu
-- Role-play: 0 câu
+- Chọn: 3 topics
+- Mỗi topic: 3 câu liên tiếp
+- Tổng: 1 warmup + (3 × 3) = **10 câu**
 
 **Form 2 (Novice Low - Intermediate High):**
-- Tổng: 13 câu (1 warmup + 12 main)
-- Mỗi topic: 1-2 câu
-- Role-play: 1 câu
+- Chọn: 3-4 topics (random)
+- Mỗi topic: 3 câu liên tiếp
+- Tổng: 1 warmup + (3-4 × 3) = **10-13 câu**
 
-**Form 3+ (Novice Low - Advanced Low):**
-- Tổng: 15 câu (1 warmup + 14 main)
-- Mỗi topic: 2 câu
-- Role-play: 1-2 câu
+**Form 3+ (Advanced Low):**
+- Chọn: 4 topics
+- Mỗi topic: 4 câu liên tiếp
+- Tổng: 1 warmup + (4 × 4) = **17 câu**
 
 ---
 
@@ -53,28 +58,56 @@
 ```
 1. [Warm-up] Tell me something about yourself. (60s)
 
+=== TOPIC 1: Geography (4 câu liên tiếp) ===
 2. [Geography] Describe your country's geography for me. (120s)
 3. [Geography] I would like you to pick a favorite place in your country from your childhood. (120s)
+4. [Geography] Tell me about the outdoor activities that are popular in your country. (120s)
+5. [Geography] How has your country changed in the past decade? (120s)
 
-4. [Furniture] Tell me about the furniture you have in your home. (120s)
-5. [Furniture] Tell me about how you use your furniture on a typical day. (120s)
+=== TOPIC 2: Furniture (4 câu liên tiếp) ===
+6. [Furniture] Tell me about the furniture you have in your home. (120s)
+7. [Furniture] Tell me about how you use your furniture on a typical day. (120s)
+8. [Furniture] Tell me about the furniture you had at home when you were a child. (120s)
+9. [Furniture] Tell me about a time when you had a problem with your furniture. (120s)
 
-6. [Housing] I would like to know where you live. Can you describe your home to me? (120s)
-7. [Housing] What is your normal routine at home? (120s)
+=== TOPIC 3: Housing (4 câu liên tiếp) ===
+10. [Housing] I would like to know where you live. Can you describe your home to me? (120s)
+11. [Housing] What is your normal routine at home? (120s)
+12. [Housing] Describe the home you lived in as a child. (120s)
+13. [Housing] Talk about the different rooms in your home. (120s)
 
-8. [Music] What kinds of music do you listen to? (120s)
-9. [Music] When and where do you usually listen to music? (120s)
+=== TOPIC 4: Music (4 câu liên tiếp) ===
+14. [Music] What kinds of music do you listen to? (120s)
+15. [Music] When and where do you usually listen to music? (120s)
+16. [Music] When did you first become interested in music? (120s)
+17. [Music] Could you think back to a particular memorable time when you heard live music? (120s)
 
-10. [Movies] What kinds of movies do you like to watch? (120s)
-11. [Movies] Tell me about when you went to the movies recently. (120s)
+Tổng: 17 câu (1 warmup + 16 main từ 4 topics × 4 câu)
+```
 
-12. [Family] Describe a family member or a friend you have. (120s)
-13. [Family] Tell me about what you commonly do with your friend or family members. (120s)
+---
 
-14. [Technology] What kinds of technology do people typically use in your country? (120s)
-15. [Technology] What piece of technology do you use most often? (120s)
+## 🎯 Ví dụ cấu trúc bài thi Form 1
 
-[Optional Role-play] Call a travel agency and ask 3-4 questions about a trip. (120s)
+```
+1. [Warm-up] Tell me something about yourself. (60s)
+
+=== TOPIC 1: Technology (3 câu liên tiếp) ===
+2. [Technology] What kinds of technology do people typically use in your country? (90s)
+3. [Technology] What piece of technology do you use most often? (90s)
+4. [Technology] Technology has definitely changed over time. Tell me about an early memory. (90s)
+
+=== TOPIC 2: Movies (3 câu liên tiếp) ===
+5. [Movies] What kinds of movies do you like to watch? (90s)
+6. [Movies] Tell me about when you went to the movies recently. (90s)
+7. [Movies] Tell me about a memorable movie that you watched in the past. (90s)
+
+=== TOPIC 3: Family (3 câu liên tiếp) ===
+8. [Family] Describe a family member or a friend you have. (90s)
+9. [Family] Tell me about what you commonly do with your friend or family members. (90s)
+10. [Family] Talk about what you did with your family and friends recently. (90s)
+
+Tổng: 10 câu (1 warmup + 9 main từ 3 topics × 3 câu)
 ```
 
 ---
@@ -97,52 +130,76 @@ export const warmupQuestions: TestQuestion[] = [
 ```
 
 ### 2. Topic Selection
-**Trước:** Chọn topics dựa trên survey (có thể 15-20 topics)
-**Sau:** Chỉ chọn 7 topics cố định theo yêu cầu user
+**Trước:** Chọn tất cả 7 topics
+**Sau:** Chọn ngẫu nhiên 3-4 topics từ pool 7 topics
 
 ```typescript
+const ALL_TOPICS = [
+  'geography',      // domestic travel
+  'furniture',      // furniture
+  'housing',        // housing
+  'music',          // music
+  'movies',         // movies
+  'familyFriends',  // family
+  'technology',     // technology
+];
+
 function selectTopics(surveyAnswers: SurveyAnswers): string[] {
-  const coreTopics = [
-    'geography',      // domestic travel
-    'furniture',      // furniture
-    'housing',        // housing
-    'music',          // music
-    'movies',         // movies
-    'familyFriends',  // family
-    'technology',     // technology
-  ];
-  return coreTopics;
+  // Shuffle and pick 3-4 topics
+  const shuffled = [...ALL_TOPICS].sort(() => Math.random() - 0.5);
+  const topicCount = Math.random() > 0.5 ? 4 : 3;
+  return shuffled.slice(0, topicCount);
 }
 ```
 
 ### 3. Question Distribution
-**Trước:** 3-5 câu mỗi topic
-**Sau:** 1-2 câu mỗi topic (tổng 11-14 câu)
+**Trước:** 1-2 câu mỗi topic (tổng 11-14 câu)
+**Sau:** 3-4 câu liên tiếp mỗi topic (tổng 10-17 câu)
 
 ```typescript
-const targetTotal = formNumber >= 3 ? 14 : formNumber >= 2 ? 13 : 11;
-const questionsPerTopic = Math.floor(targetTotal / selectedTopics.length);
+// Each topic gets 3-4 consecutive questions
+const questionsPerTopic = formNumber >= 3 ? 4 : 3;
+
+selectedTopics.forEach((topicKey) => {
+  const thread = topicThreads[topicKey];
+  const threadQuestions = thread.questions.slice(0, questionsPerTopic);
+  // Add all questions consecutively
+  threadQuestions.forEach((q) => {
+    questions.push({ ... });
+  });
+});
 ```
 
 ---
 
 ## 📊 Console Output khi bắt đầu test
 
+**Ví dụ Form 3 (4 topics × 4 câu):**
 ```
 📊 Question Bank Stats: {totalTopics: 28, totalQuestions: 200, totalRoleplays: 70}
-📝 Total questions for this test: 15
-📋 Selected topics for this test: ['geography', 'furniture', 'housing', 'music', 'movies', 'familyFriends', 'technology']
-🎯 Target: 11-14 main questions from 7 topics
-📚 Topic "Geography": Adding 2 questions
-📚 Topic "Furniture": Adding 2 questions
-📚 Topic "Housing": Adding 2 questions
-📚 Topic "Music": Adding 2 questions
-📚 Topic "Movies": Adding 2 questions
-📚 Topic "Family/Friends": Adding 2 questions
-📚 Topic "Technology": Adding 2 questions
-🎭 Adding 1 role-play scenarios
-✅ Total main questions generated: 15
-📊 Total test questions: 16 (1 warmup + 15 main)
+📝 Total questions for this test: 17
+📋 Selected topics for this test: ['geography', 'furniture', 'housing', 'music']
+🎯 Structure: 4 topics × 3-4 questions each
+📚 Topic "Geography": Adding 4 consecutive questions
+📚 Topic "Furniture": Adding 4 consecutive questions
+📚 Topic "Housing": Adding 4 consecutive questions
+📚 Topic "Music": Adding 4 consecutive questions
+✅ Total main questions generated: 16
+📊 Total test questions: 17 (1 warmup + 16 main)
+✅ VALIDATION PASSED: All questions are from the question bank
+```
+
+**Ví dụ Form 1 (3 topics × 3 câu):**
+```
+📊 Question Bank Stats: {totalTopics: 28, totalQuestions: 200, totalRoleplays: 70}
+📝 Total questions for this test: 10
+📋 Selected topics for this test: ['technology', 'movies', 'familyFriends']
+🎯 Structure: 3 topics × 3-4 questions each
+📚 Topic "Technology": Adding 3 consecutive questions
+📚 Topic "Movies": Adding 3 consecutive questions
+📚 Topic "Family/Friends": Adding 3 consecutive questions
+✅ Total main questions generated: 9
+📊 Total test questions: 10 (1 warmup + 9 main)
 ✅ VALIDATION PASSED: All questions are from the question bank
 ```
 
@@ -178,12 +235,12 @@ Mở DevTools (F12) → Console tab → Bắt đầu test → Xem logs
 ## 📝 Tổng kết
 
 ### Cấu trúc bài thi OPIc chuẩn:
-✅ 1 warm-up question  
-✅ 11-14 main questions từ 7 topics  
-✅ 0-2 role-play scenarios  
-✅ **Tổng: 12-15 câu**  
+✅ **1 warm-up question**  
+✅ **3-4 topics được chọn ngẫu nhiên** từ pool 7 topics  
+✅ **Mỗi topic có 3-4 câu hỏi liên tiếp**  
+✅ **Tổng: 10-17 câu** (tùy form level)  
 
-### 7 Topics chính:
+### 7 Topics trong pool (chọn 3-4):
 1. Geography (Domestic Travel)
 2. Furniture
 3. Housing
@@ -192,13 +249,22 @@ Mở DevTools (F12) → Console tab → Bắt đầu test → Xem logs
 6. Family/Friends
 7. Technology
 
+### Phân bổ theo Form Level:
+- **Form 1**: 3 topics × 3 câu = 10 câu tổng
+- **Form 2**: 3-4 topics × 3 câu = 10-13 câu tổng
+- **Form 3+**: 4 topics × 4 câu = 17 câu tổng
+
 ### Time limits:
 - Warm-up: 60 giây
 - Main questions: 90-120 giây (tùy form)
-- Role-play: 90-120 giây (tùy form)
+
+### Đặc điểm quan trọng:
+- Các câu hỏi trong cùng topic được hỏi **liên tiếp** (không xen kẽ)
+- Topics được chọn **ngẫu nhiên** mỗi lần test
+- Không có role-play scenarios (đã loại bỏ)
 
 ---
 
 **Status**: ✅ Hoàn tất và đã test  
 **Last Updated**: 2026  
-**Total Questions per Test**: 12-15 câu
+**Total Questions per Test**: 10-17 câu (tùy form)
