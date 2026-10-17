@@ -396,35 +396,157 @@ function generateImprovedSpeech(responses: TestResponse[]): string {
     const original = response.transcript;
     if (!original || original.trim().length === 0) return;
     
-    let improved = original;
+    // Step 1: Clean up the original text
+    let improved = cleanupSpeech(original);
     
-    // Add connectors if missing
-    if (!/\b(because|however|although|therefore|for example)\b/i.test(improved)) {
-      improved = improved.replace(/\.(?=\s+[A-Z])/g, '. Furthermore,');
-    }
+    // Step 2: Improve sentence structure
+    improved = improveSentenceStructure(improved);
     
-    // Add descriptive words if missing
-    if (!/\b(beautiful|amazing|wonderful|interesting|important)\b/i.test(improved)) {
-      improved = improved.replace(/\b(thing|place|person|experience)\b/gi, (match) => {
-        const adjectives = ['interesting', 'wonderful', 'amazing', 'important'];
-        return `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${match}`;
-      });
-    }
+    // Step 3: Add natural connectors (not repetitive)
+    improved = addNaturalConnectors(improved);
     
-    // Add opinion phrases if missing
-    if (!/\b(i think|i believe|in my opinion)\b/i.test(improved)) {
-      improved = `In my opinion, ${improved.charAt(0).toLowerCase()}${improved.slice(1)}`;
-    }
+    // Step 4: Enhance vocabulary
+    improved = enhanceVocabulary(improved);
     
-    // Add examples if missing
-    if (!/\b(for example|such as|like)\b/i.test(improved) && improved.length > 100) {
-      improved += ' For example, I remember one specific instance that illustrates this point.';
-    }
+    // Step 5: Add specific examples naturally
+    improved = addSpecificExamples(improved, response.question);
     
     improvements.push(`**Question ${index + 1} - Improved Version:**\n\n${improved}\n`);
   });
   
   return improvements.join('\n---\n\n');
+}
+
+// Clean up speech recognition errors and filler words
+function cleanupSpeech(text: string): string {
+  let cleaned = text;
+  
+  // Remove common filler words
+  cleaned = cleaned.replace(/\b(uh|um|umm|uhh|er|ah|like, you know|you know|I mean|basically|actually|sort of|kind of)\b/gi, '');
+  
+  // Remove repeated words
+  cleaned = cleaned.replace(/\b(\w+)\s+\1\b/gi, '$1');
+  
+  // Fix common speech recognition errors
+  cleaned = cleaned.replace(/\btwen\b/gi, 'twenty');
+  cleaned = cleaned.replace(/\bper sign\b/gi, 'person');
+  cleaned = cleaned.replace(/\bLuka\b/gi, 'look at');
+  
+  // Remove extra spaces
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  // Fix capitalization after periods
+  cleaned = cleaned.replace(/\.\s+([a-z])/g, (match, letter) => `. ${letter.toUpperCase()}`);
+  
+  return cleaned;
+}
+
+// Improve sentence structure by combining short sentences
+function improveSentenceStructure(text: string): string {
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const improved: string[] = [];
+  
+  for (let i = 0; i < sentences.length; i++) {
+    const current = sentences[i].trim();
+    const next = i < sentences.length - 1 ? sentences[i + 1].trim() : '';
+    
+    // Combine very short sentences (< 8 words) with the next one
+    if (current.split(/\s+/).length < 8 && next && next.split(/\s+/).length < 15) {
+      const connectors = ['and', 'which', 'where', 'while', 'as'];
+      const connector = connectors[Math.floor(Math.random() * connectors.length)];
+      improved.push(`${current} ${connector} ${next.charAt(0).toLowerCase()}${next.slice(1)}`);
+      i++; // Skip next sentence
+    } else {
+      improved.push(current);
+    }
+  }
+  
+  return improved.join('. ') + '.';
+}
+
+// Add natural connectors without repetition
+function addNaturalConnectors(text: string): string {
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const connectorTypes = {
+    addition: ['Additionally', 'Moreover', 'Furthermore', 'Also'],
+    contrast: ['However', 'On the other hand', 'Nevertheless', 'Although'],
+    example: ['For instance', 'Specifically', 'To illustrate', 'For example'],
+    result: ['Therefore', 'As a result', 'Consequently', 'Thus'],
+    sequence: ['First', 'Second', 'Finally', 'Next']
+  };
+  
+  const usedConnectors = new Set<string>();
+  const improved: string[] = [];
+  
+  sentences.forEach((sentence, index) => {
+    let improvedSentence = sentence.trim();
+    
+    // Add connector to some sentences (not all)
+    if (index > 0 && index % 3 === 0 && improvedSentence.length > 20) {
+      const types = Object.keys(connectorTypes) as Array<keyof typeof connectorTypes>;
+      const type = types[Math.floor(Math.random() * types.length)];
+      const availableConnectors = connectorTypes[type].filter(c => !usedConnectors.has(c));
+      
+      if (availableConnectors.length > 0) {
+        const connector = availableConnectors[Math.floor(Math.random() * availableConnectors.length)];
+        usedConnectors.add(connector);
+        improvedSentence = `${connector}, ${improvedSentence.charAt(0).toLowerCase()}${improvedSentence.slice(1)}`;
+      }
+    }
+    
+    improved.push(improvedSentence);
+  });
+  
+  return improved.join('. ') + '.';
+}
+
+// Enhance vocabulary with better descriptive words
+function enhanceVocabulary(text: string): string {
+  let enhanced = text;
+  
+  // Replace basic words with better alternatives (only once per word)
+  const replacements = [
+    { old: /\bgood\b/gi, new: 'excellent' },
+    { old: /\bbad\b/gi, new: 'challenging' },
+    { old: /\bbig\b/gi, new: 'substantial' },
+    { old: /\bsmall\b/gi, new: 'modest' },
+    { old: /\bnice\b/gi, new: 'pleasant' },
+    { old: /\bvery\b/gi, new: 'remarkably' },
+  ];
+  
+  replacements.forEach(({ old, new: replacement }) => {
+    const matches = enhanced.match(old);
+    if (matches && matches.length <= 2) { // Only replace if used 2 times or less
+      enhanced = enhanced.replace(old, replacement);
+    }
+  });
+  
+  return enhanced;
+}
+
+// Add specific examples naturally based on the question
+function addSpecificExamples(text: string, question: string): string {
+  // Only add example if the text is long enough and doesn't already have one
+  if (text.length < 150 || /\b(for example|for instance|specifically)\b/i.test(text)) {
+    return text;
+  }
+  
+  // Add example at a natural breaking point (after a period in the middle)
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const middleIndex = Math.floor(sentences.length / 2);
+  
+  if (middleIndex > 0 && middleIndex < sentences.length) {
+    const examplePhrases = [
+      'To give you a specific example, ',
+      'Let me illustrate this with an example: ',
+      'For instance, I can recall a particular situation where '
+    ];
+    const examplePhrase = examplePhrases[Math.floor(Math.random() * examplePhrases.length)];
+    
+    sentences.splice(middleIndex, 0, examplePhrase + sentences[middleIndex].charAt(0).toLowerCase() + sentences[middleIndex].slice(1));
+  }
+  
+  return sentences.join('. ') + '.';
 }
 
 export function scoreResponses(responses: TestResponse[], formNumber: number): ScoringResult {
