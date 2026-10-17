@@ -26,6 +26,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const [manualText, setManualText] = useState('');
   const [useManualInput, setUseManualInput] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -148,30 +149,40 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
     }
   }, [ttsSpeaking, ttsSupported, phase]);
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
 
+    setIsProcessing(true);
+
     const isManualMode = useManualInputRef.current;
-
-    if (!isManualMode) {
-      stopListening();
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      }
-    }
-
     const q = currentQuestionRef.current;
     const qIndex = currentQuestionIndexRef.current;
     
     if (q) {
-      // Get the latest transcript - use getFinalTranscript() for voice mode
-      const finalTranscript = isManualMode 
-        ? manualTextRef.current 
-        : getFinalTranscript();
+      let finalTranscript = '';
+      
+      if (isManualMode) {
+        // Text mode - get immediately
+        finalTranscript = manualTextRef.current;
+      } else {
+        // Voice mode - stop recording first
+        stopListening();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Wait 2 seconds for speech recognition to finalize
+        console.log('⏳ Waiting for speech recognition to finalize...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Get the final transcript
+        finalTranscript = getFinalTranscript();
+        console.log('✅ Final transcript retrieved:', finalTranscript.length, 'characters');
+      }
       
       const audioBlob = audioChunksRef.current.length > 0 
         ? new Blob(audioChunksRef.current, { type: 'audio/webm' })
@@ -189,6 +200,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
       setResponses(prev => [...prev, response]);
     }
 
+    setIsProcessing(false);
     setPhase('review');
     setShowTranscript(true);
   };
@@ -494,10 +506,24 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               {/* Stop button */}
               <button
                 onClick={handleStopRecording}
-                className="px-8 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 transition-all flex items-center gap-2 mx-auto"
+                disabled={isProcessing}
+                className={`px-8 py-3 rounded-xl font-semibold text-white transition-all flex items-center gap-2 mx-auto ${
+                  isProcessing 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
+                }`}
               >
-                <div className="w-4 h-4 rounded-sm bg-white" />
-                Submit Answer
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing Transcript...
+                  </>
+                ) : (
+                  <>
+                    <div className="w-4 h-4 rounded-sm bg-white" />
+                    Submit Answer
+                  </>
+                )}
               </button>
 
               {!recordingStarted && !useManualInput && (
