@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionReturn {
   transcript: string;
@@ -20,6 +20,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef('');
   const shouldListenRef = useRef(false);
+  const restartCountRef = useRef(0);
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -29,17 +30,8 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     return finalTranscriptRef.current;
   }, []);
 
-  const startListening = useCallback(() => {
-    if (!isSupported) {
-      setError('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-      return;
-    }
-
-    // Stop any existing recognition
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
-      recognitionRef.current = null;
-    }
+  const createRecognition = useCallback(() => {
+    if (!isSupported) return null;
 
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionAPI();
@@ -51,77 +43,155 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
     recognition.onresult = (event: any) => {
       let interim = '';
+      
+      // Process all results from this event
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
+        const transcript_text = result[0].transcript;
+        
         if (result.isFinal) {
-          finalTranscriptRef.current += result[0].transcript + ' ';
+          // Append final result to accumulated transcript
+          finalTranscriptRef.current += transcript_text + ' ';
+          console.log(`🎤 [Final #${i}] "${transcript_text}" → Total: ${finalTranscriptRef.current.trim().split(/\s+/).length} words`);
           setTranscript(finalTranscriptRef.current.trim());
         } else {
-          interim += result[0].transcript;
+          // Accumulate interim results
+          interim += transcript_text;
         }
       }
+      
+      // Always update interim transcript (even if empty)
       setInterimTranscript(interim);
+      
+      if (interim) {
+        console.log(`🎤 [Interim] "${interim}"`);
+      }
     };
 
     recognition.onerror = (event: any) => {
-      console.warn('Speech recognition error:', event.error);
+      console.warn('⚠️ Speech recognition error:', event.error);
+      
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         setError('Microphone access denied. Please allow microphone access in your browser settings.');
         setIsListening(false);
         shouldListenRef.current = false;
       } else if (event.error === 'no-speech') {
+        // No speech detected - this is normal, just continue
         setError(null);
+        console.log('🎤 No speech detected, continuing to listen...');
       } else if (event.error === 'audio-capture') {
         setError('No microphone found. Please connect a microphone or use text input.');
         setIsListening(false);
         shouldListenRef.current = false;
       } else if (event.error === 'network') {
         setError('Network error. Speech recognition requires internet connection.');
+        console.error('🎤 Network error - check your internet connection');
+      } else if (event.error === 'aborted') {
+        // Recognition was aborted - will restart if shouldListenRef is true
+        console.log('🎤 Recognition aborted, will restart...');
       } else {
         setError(null);
       }
     };
 
     recognition.onend = () => {
+      console.log(`🎤 Recognition session ended (restart count: ${restartCountRef.current})`);
+      
       if (shouldListenRef.current) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.warn('Failed to restart speech recognition:', e);
-          setIsListening(false);
-        }
+        restartCountRef.current += 1;
+        
+        // Small delay before restart to avoid race conditions
+        setTimeout(() => {
+          if (shouldListenRef.current && recognitionRef.current) {
+            try {
+              console.log(`🎤 Restarting recognition session #${restartCountRef.current}...`);
+              recognitionRef.current.start();
+            } catch (e) {
+              console.error('❌ Failed to restart speech recognition:', e);
+              // Try creating a new recognition instance
+              try {
+                const newRecognition = createRecognition();
+                if (newRecognition) {
+                  recognitionRef.current = newRecognition;
+                  newRecognition.start();
+                  console.log('✅ Created new recognition instance and started');
+                }
+              } catch (e2) {
+                console.error('❌ Failed to create new recognition:', e2);
+                setIsListening(false);
+              }
+            }
+          }
+        }, 100);
       } else {
         setIsListening(false);
       }
     };
 
-    recognitionRef.current = recognition;
-    shouldListenRef.current = true;
+    return recognition;
+  }, [isSupported]);
+
+  const startListening = useCallback(() => {
+    if (!isSupported) {
+      setError('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    console.log('🎤 Starting speech recognition...');
+
+    // Stop any existing recognition
+    if (recognitionRef.current) {
+      try { 
+        recognitionRef.current.stop(); 
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    // Reset state
+    restartCountRef.current = 0;
     finalTranscriptRef.current = '';
     setTranscript('');
     setInterimTranscript('');
     setError(null);
 
+    // Create new recognition instance
+    const recognition = createRecognition();
+    if (!recognition) {
+      setError('Failed to create speech recognition instance.');
+      return;
+    }
+
+    recognitionRef.current = recognition;
+    shouldListenRef.current = true;
+
     try {
       recognition.start();
       setIsListening(true);
+      console.log('✅ Speech recognition started successfully');
     } catch (e) {
-      console.error('Failed to start speech recognition:', e);
+      console.error('❌ Failed to start speech recognition:', e);
       setError('Failed to start speech recognition. Please try again or use text input.');
       setIsListening(false);
     }
-  }, [isSupported]);
+  }, [isSupported, createRecognition]);
 
   const stopListening = useCallback(() => {
+    console.log('🎤 Stopping speech recognition...');
     shouldListenRef.current = false;
+    
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {}
+      } catch (e) {
+        console.warn('⚠️ Error stopping recognition:', e);
+      }
       recognitionRef.current = null;
     }
+    
     setIsListening(false);
     setInterimTranscript('');
+    
+    console.log(`✅ Speech recognition stopped. Final transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words`);
   }, []);
 
   const resetTranscript = useCallback(() => {
@@ -129,6 +199,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     setInterimTranscript('');
     finalTranscriptRef.current = '';
     setError(null);
+    restartCountRef.current = 0;
   }, []);
 
   return {

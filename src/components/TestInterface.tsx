@@ -39,7 +39,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const manualTextRef = useRef('');
   const useManualInputRef = useRef(false);
 
-  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported, getFinalTranscript } = useSpeechRecognition();
+  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported, getFinalTranscript, error } = useSpeechRecognition();
   const { speak: speakText, cancel: cancelSpeech, isSpeaking: ttsSpeaking, isSupported: ttsSupported } = useSpeechSynthesis();
 
   // Generate personalized questions based on survey answers
@@ -484,29 +484,60 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
 
               {/* Voice transcript (live) - always show when in voice mode */}
               {!useManualInput && (
-                <div className="max-w-2xl mx-auto mb-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left">
+                <div className={`max-w-2xl mx-auto mb-4 p-4 rounded-xl border text-left transition-all ${
+                  isListening 
+                    ? 'bg-slate-800/50 border-green-500/30' 
+                    : 'bg-slate-800/30 border-slate-700/50'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-green-400 font-medium">🎤 Speech-to-Text (Live):</p>
+                    <div className="flex items-center gap-2">
+                      {isListening && (
+                        <div className="flex gap-0.5">
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      )}
+                      <p className={`text-xs font-medium ${isListening ? 'text-green-400' : 'text-gray-500'}`}>
+                        🎤 Speech-to-Text {isListening ? '(Live)' : '(Paused)'}
+                      </p>
+                    </div>
                     <span className="text-xs text-gray-500">
                       {(transcript + ' ' + interimTranscript).trim().split(/\s+/).filter(w => w).length} words
                     </span>
                   </div>
+                  
                   {transcript || interimTranscript ? (
-                    <div>
+                    <div className="min-h-[60px]">
                       <p className="text-gray-300 text-sm leading-relaxed">
                         {transcript}
-                        {interimTranscript && <span className="text-gray-500 italic">{interimTranscript}</span>}
+                        {interimTranscript && (
+                          <span className="text-cyan-400/70 italic"> {interimTranscript}</span>
+                        )}
+                        {isListening && <span className="inline-block w-0.5 h-4 bg-cyan-400 animate-pulse ml-0.5" />}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm italic">
-                      {isListening ? '🎙️ Listening... Start speaking now' : '⏳ Waiting for microphone...'}
-                    </p>
+                    <div className="min-h-[60px] flex items-center justify-center">
+                      <p className="text-gray-600 text-sm italic">
+                        {isListening ? '🎙️ Listening... Start speaking now' : '⏳ Waiting for microphone...'}
+                      </p>
+                    </div>
                   )}
+                  
                   {isListening && (
-                    <div className="mt-2 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                      <span className="text-xs text-green-400">Microphone active - speak clearly</span>
+                    <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        <span className="text-xs text-green-400">Microphone active</span>
+                      </div>
+                      <span className="text-xs text-gray-500">Speak clearly into your microphone</span>
+                    </div>
+                  )}
+                  
+                  {error && (
+                    <div className="mt-2 pt-2 border-t border-amber-500/30">
+                      <p className="text-xs text-amber-400">⚠️ {error}</p>
                     </div>
                   )}
                 </div>
