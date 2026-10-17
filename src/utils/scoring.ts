@@ -72,35 +72,53 @@ function calculateFunctionScore(responses: TestResponse[]): number {
     const text = r.transcript;
     if (!text || text.trim().length === 0) return;
     
+    const wordCount = countWords(text);
+    
     // Narration (past tense storytelling) - key for Intermediate/Advanced
-    if (hasNarration(text)) score += 12;
+    // STRICT: Must have at least 3 past tense verbs for full points
+    const pastTenseMatches = text.match(/\b(went|saw|did|had|was|were|said|came|took|made|found|gave|told|thought|knew|got|felt|became|showed|heard|played|ran|brought|held|began|kept|left|let|spoke|stood|grew|drew)\b/gi) || [];
+    if (pastTenseMatches.length >= 3) score += 12;
+    else if (pastTenseMatches.length >= 1) score += 6;
     
-    // Description (detailed descriptions) - key for all levels
-    if (hasDescription(text)) score += 10;
+    // Description (detailed descriptions) - STRICT: Need multiple descriptive words
+    const descriptiveMatches = text.match(/\b(beautiful|amazing|wonderful|terrible|difficult|easy|interesting|important|significant|challenging|exciting|boring|complex|simple|traditional|modern|ancient|popular|famous|special|different|similar|comfortable|expensive|cheap|large|small|bright|dark|quiet|loud)\b/gi) || [];
+    if (descriptiveMatches.length >= 3) score += 10;
+    else if (descriptiveMatches.length >= 1) score += 5;
     
-    // Opinions with support - key for Advanced
-    if (hasOpinions(text)) score += 10;
+    // Opinions with support - STRICT: Must have opinion + reason
+    const hasOpinion = /\b(i think|i believe|i feel|i agree|i disagree|in my opinion|from my perspective|personally|to me|it seems|it appears)\b/i.test(text);
+    const hasReason = /\b(because|since|due to|the reason|that's why|so|therefore)\b/i.test(text);
+    if (hasOpinion && hasReason) score += 10;
+    else if (hasOpinion) score += 5;
     
-    // Abstract topics - key for Advanced High/Superior
-    if (hasAbstractTopics(text)) score += 8;
+    // Abstract topics - STRICT: Must discuss abstract concepts
+    if (hasAbstractTopics(text) && wordCount >= 80) score += 8;
+    else if (hasAbstractTopics(text)) score += 4;
     
-    // Connectors and cohesive devices - key for paragraph-level discourse
-    if (hasConnectors(text)) score += 8;
+    // Connectors and cohesive devices - STRICT: Need multiple connectors
+    const connectorMatches = text.match(/\b(because|however|although|therefore|moreover|furthermore|in addition|on the other hand|for example|as a result|consequently|nevertheless|while|since|despite|first|second|finally|next|also)\b/gi) || [];
+    if (connectorMatches.length >= 3) score += 8;
+    else if (connectorMatches.length >= 1) score += 4;
     
     // Questions asked (shows interaction ability)
     if (/\?/.test(text)) score += 3;
     
-    // Hypothetical situations (Advanced High+)
-    if (/would|could|if i|imagine/i.test(text)) score += 5;
+    // Hypothetical situations (Advanced High+) - STRICT
+    const hypotheticalMatches = text.match(/\b(would|could|if i|imagine|suppose|what if|might)\b/gi) || [];
+    if (hypotheticalMatches.length >= 2) score += 5;
+    else if (hypotheticalMatches.length >= 1) score += 2;
   });
   
-  // Normalize to 100
-  const maxPossible = totalResponses * 56; // Max points per response
-  return Math.min(100, Math.round((score / maxPossible) * 100));
+  // Normalize to 100 - STRICT: Max possible increased
+  const maxPossible = totalResponses * 56;
+  const rawScore = Math.round((score / maxPossible) * 100);
+  
+  // Apply strict penalty: cap at 85 unless exceptional
+  return Math.min(85, rawScore);
 }
 
 function calculateAccuracyScore(responses: TestResponse[]): number {
-  let score = 40; // Base score
+  let score = 25; // STRICT: Lower base score
   const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
   if (validResponses.length === 0) return 0;
@@ -111,37 +129,37 @@ function calculateAccuracyScore(responses: TestResponse[]): number {
     
     if (wordCount === 0 || r.duration === 0) return;
     
-    // Fluency indicator: words per second (natural speech is 2-3 wps)
+    // Fluency indicator: words per second - STRICT: Narrower ideal range
     const wps = wordCount / r.duration;
-    if (wps >= 1.8 && wps <= 3.5) score += 10; // Excellent fluency
-    else if (wps >= 1.2 && wps <= 4) score += 6; // Good fluency
-    else if (wps >= 0.8) score += 3; // Acceptable
+    if (wps >= 2 && wps <= 2.8) score += 10; // Perfect fluency
+    else if (wps >= 1.8 && wps <= 3) score += 6; // Good fluency
+    else if (wps >= 1.5) score += 3; // Acceptable
     
-    // Sentence complexity (longer sentences = more advanced)
+    // Sentence complexity - STRICT: Higher requirements
     if (sentenceCount > 0) {
       const avgWordsPerSentence = wordCount / sentenceCount;
-      if (avgWordsPerSentence >= 10 && avgWordsPerSentence <= 25) score += 8; // Complex sentences
-      else if (avgWordsPerSentence >= 7 && avgWordsPerSentence <= 30) score += 5; // Good sentences
-      else if (avgWordsPerSentence >= 5) score += 2; // Basic sentences
+      if (avgWordsPerSentence >= 15 && avgWordsPerSentence <= 20) score += 10; // Complex sentences
+      else if (avgWordsPerSentence >= 10 && avgWordsPerSentence <= 25) score += 6; // Good sentences
+      else if (avgWordsPerSentence >= 7) score += 3; // Basic sentences
     }
     
-    // Content length (more content = better)
+    // Content length - STRICT: Much higher requirements
     if (wordCount >= 150) score += 10; // Excellent length
-    else if (wordCount >= 100) score += 7; // Good length
-    else if (wordCount >= 60) score += 4; // Acceptable length
-    else if (wordCount >= 30) score += 2; // Minimal
+    else if (wordCount >= 100) score += 6; // Good length
+    else if (wordCount >= 70) score += 3; // Acceptable
     
-    // Duration (speaking longer shows confidence)
-    if (r.duration >= 60) score += 5;
-    else if (r.duration >= 40) score += 3;
-    else if (r.duration >= 20) score += 1;
+    // Duration - STRICT: Must speak for sufficient time
+    if (r.duration >= 70) score += 7; // Excellent duration
+    else if (r.duration >= 50) score += 4; // Good duration
+    else if (r.duration >= 35) score += 2; // Acceptable
   });
   
-  return Math.min(100, score);
+  // STRICT: Cap at 80
+  return Math.min(80, score);
 }
 
 function calculateContentScore(responses: TestResponse[]): number {
-  let score = 30; // Base
+  let score = 20; // STRICT: Lower base score
   const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
   if (validResponses.length === 0) return 0;
@@ -150,35 +168,45 @@ function calculateContentScore(responses: TestResponse[]): number {
     const wordCount = countWords(r.transcript);
     const question = r.question.toLowerCase();
     
-    // Relevance: Check if response addresses the question
+    // Relevance: Check if response addresses the question - STRICT
     const questionWords = question.split(/\s+/).filter(w => w.length > 3);
     const responseWords = r.transcript.toLowerCase();
     const relevanceScore = questionWords.filter(qw => responseWords.includes(qw)).length;
     
-    if (relevanceScore >= 3) score += 12; // Highly relevant
-    else if (relevanceScore >= 2) score += 8; // Somewhat relevant
-    else if (relevanceScore >= 1) score += 4; // Minimally relevant
+    if (relevanceScore >= 4) score += 12; // Highly relevant
+    else if (relevanceScore >= 3) score += 8; // Relevant
+    else if (relevanceScore >= 2) score += 4; // Somewhat relevant
     
-    // Specificity: Detailed responses with examples
-    if (/\d+/.test(r.transcript)) score += 5; // Contains numbers/specifics
-    if (/for example|such as|like|specifically/i.test(r.transcript)) score += 6; // Examples
-    if (/because|since|due to|the reason/i.test(r.transcript)) score += 5; // Explanations
+    // Specificity - STRICT: Must have multiple specifics
+    const numberMatches = (r.transcript.match(/\d+/g) || []).length;
+    if (numberMatches >= 3) score += 6; // Multiple specifics
+    else if (numberMatches >= 1) score += 3; // Some specifics
     
-    // Content depth
-    if (wordCount >= 120) score += 8;
-    else if (wordCount >= 80) score += 5;
-    else if (wordCount >= 50) score += 3;
+    const exampleMatches = (r.transcript.match(/for example|such as|like|specifically|for instance/gi) || []).length;
+    if (exampleMatches >= 2) score += 7; // Multiple examples
+    else if (exampleMatches >= 1) score += 4; // One example
     
-    // Duration shows engagement
-    if (r.duration >= 50) score += 4;
-    else if (r.duration >= 30) score += 2;
+    const reasonMatches = (r.transcript.match(/because|since|due to|the reason|that's why/gi) || []).length;
+    if (reasonMatches >= 2) score += 6; // Multiple explanations
+    else if (reasonMatches >= 1) score += 3; // One explanation
+    
+    // Content depth - STRICT: Higher requirements
+    if (wordCount >= 150) score += 10; // Excellent depth
+    else if (wordCount >= 100) score += 6; // Good depth
+    else if (wordCount >= 70) score += 3; // Acceptable depth
+    
+    // Duration - STRICT
+    if (r.duration >= 60) score += 5;
+    else if (r.duration >= 40) score += 3;
+    else if (r.duration >= 25) score += 1;
   });
   
-  return Math.min(100, score);
+  // STRICT: Cap at 80
+  return Math.min(80, score);
 }
 
 function calculateTextTypeScore(responses: TestResponse[]): number {
-  let score = 25; // Base
+  let score = 15; // STRICT: Much lower base score
   const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
   if (validResponses.length === 0) return 0;
@@ -187,40 +215,41 @@ function calculateTextTypeScore(responses: TestResponse[]): number {
   const totalSentences = countSentences(allText);
   const totalWords = countWords(allText);
   
-  // Paragraph-level production (connected sentences)
-  if (totalSentences >= 15) score += 15; // Excellent
-  else if (totalSentences >= 10) score += 12; // Good
-  else if (totalSentences >= 6) score += 8; // Acceptable
-  else if (totalSentences >= 3) score += 4; // Basic
+  // Paragraph-level production - STRICT: Higher requirements
+  if (totalSentences >= 20) score += 15; // Excellent
+  else if (totalSentences >= 15) score += 12; // Good
+  else if (totalSentences >= 10) score += 8; // Acceptable
+  else if (totalSentences >= 6) score += 4; // Basic
   
-  // Connected discourse with cohesive devices
+  // Connected discourse with cohesive devices - STRICT
   const connectorCount = (allText.match(/\b(because|however|although|therefore|moreover|furthermore|in addition|on the other hand|for example|as a result|consequently|nevertheless|while|since|despite|first|then|finally|next|also)\b/gi) || []).length;
   
-  if (connectorCount >= 8) score += 15; // Excellent cohesion
-  else if (connectorCount >= 5) score += 12; // Good cohesion
-  else if (connectorCount >= 3) score += 8; // Some cohesion
-  else if (connectorCount >= 1) score += 4; // Minimal cohesion
+  if (connectorCount >= 10) score += 15; // Excellent cohesion
+  else if (connectorCount >= 7) score += 12; // Good cohesion
+  else if (connectorCount >= 4) score += 8; // Some cohesion
+  else if (connectorCount >= 2) score += 4; // Minimal cohesion
   
-  // Multiple text types (narration + description + opinion)
+  // Multiple text types - STRICT: Must demonstrate all three
   const hasNarr = hasNarration(allText);
   const hasDesc = hasDescription(allText);
   const hasOpin = hasOpinions(allText);
   const textTypeCount = [hasNarr, hasDesc, hasOpin].filter(Boolean).length;
   
   if (textTypeCount >= 3) score += 15; // All three types
-  else if (textTypeCount >= 2) score += 10; // Two types
-  else if (textTypeCount >= 1) score += 5; // One type
+  else if (textTypeCount >= 2) score += 8; // Two types
+  else if (textTypeCount >= 1) score += 4; // One type
   
-  // Organization indicators
+  // Organization indicators - STRICT
   if (/first|second|third|finally|in conclusion|to summarize/i.test(allText)) score += 8;
   if (/on the one hand|on the other hand|in contrast|similarly/i.test(allText)) score += 7;
   
-  // Overall length and complexity
-  if (totalWords >= 500) score += 10;
-  else if (totalWords >= 300) score += 7;
-  else if (totalWords >= 150) score += 4;
+  // Overall length and complexity - STRICT: Much higher requirements
+  if (totalWords >= 600) score += 12; // Excellent
+  else if (totalWords >= 400) score += 8; // Good
+  else if (totalWords >= 250) score += 4; // Acceptable
   
-  return Math.min(100, score);
+  // STRICT: Cap at 80
+  return Math.min(80, score);
 }
 
 function generateFeedback(result: { functionScore: number; accuracyScore: number; contentScore: number; textTypeScore: number }): string[] {
@@ -357,14 +386,56 @@ function generateSuggestions(result: { overallScore: number; functionScore: numb
   return suggestions;
 }
 
+// Generate improved version of user's speech
+function generateImprovedSpeech(responses: TestResponse[]): string {
+  if (responses.length === 0) return '';
+  
+  const improvements: string[] = [];
+  
+  responses.forEach((response, index) => {
+    const original = response.transcript;
+    if (!original || original.trim().length === 0) return;
+    
+    let improved = original;
+    
+    // Add connectors if missing
+    if (!/\b(because|however|although|therefore|for example)\b/i.test(improved)) {
+      improved = improved.replace(/\.(?=\s+[A-Z])/g, '. Furthermore,');
+    }
+    
+    // Add descriptive words if missing
+    if (!/\b(beautiful|amazing|wonderful|interesting|important)\b/i.test(improved)) {
+      improved = improved.replace(/\b(thing|place|person|experience)\b/gi, (match) => {
+        const adjectives = ['interesting', 'wonderful', 'amazing', 'important'];
+        return `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${match}`;
+      });
+    }
+    
+    // Add opinion phrases if missing
+    if (!/\b(i think|i believe|in my opinion)\b/i.test(improved)) {
+      improved = `In my opinion, ${improved.charAt(0).toLowerCase()}${improved.slice(1)}`;
+    }
+    
+    // Add examples if missing
+    if (!/\b(for example|such as|like)\b/i.test(improved) && improved.length > 100) {
+      improved += ' For example, I remember one specific instance that illustrates this point.';
+    }
+    
+    improvements.push(`**Question ${index + 1} - Improved Version:**\n\n${improved}\n`);
+  });
+  
+  return improvements.join('\n---\n\n');
+}
+
 export function scoreResponses(responses: TestResponse[], formNumber: number): ScoringResult {
   const functionScore = calculateFunctionScore(responses);
   const accuracyScore = calculateAccuracyScore(responses);
   const contentScore = calculateContentScore(responses);
   const textTypeScore = calculateTextTypeScore(responses);
   
+  // STRICT: Apply harsher weighting
   const overallScore = Math.round(
-    (functionScore * 0.3) + (accuracyScore * 0.25) + (contentScore * 0.2) + (textTypeScore * 0.25)
+    (functionScore * 0.28) + (accuracyScore * 0.27) + (contentScore * 0.22) + (textTypeScore * 0.23)
   );
   
   // Determine proficiency level
@@ -382,6 +453,9 @@ export function scoreResponses(responses: TestResponse[], formNumber: number): S
   const feedback = generateFeedback({ functionScore, accuracyScore, contentScore, textTypeScore });
   const suggestions = generateSuggestions({ overallScore, functionScore, accuracyScore, contentScore, textTypeScore, passed });
   
+  // Generate improved speech
+  const improvedSpeech = generateImprovedSpeech(responses);
+  
   return {
     overallScore,
     proficiencyLevel,
@@ -392,5 +466,6 @@ export function scoreResponses(responses: TestResponse[], formNumber: number): S
     feedback,
     suggestions,
     passed,
+    improvedSpeech,
   };
 }
