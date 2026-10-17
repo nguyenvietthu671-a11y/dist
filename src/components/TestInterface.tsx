@@ -295,13 +295,31 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="relative z-10 w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
-        <motion.div
-          className="h-full bg-gradient-to-r from-purple-500 to-cyan-500"
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5 }}
-        />
+      {/* Progress bar with dots */}
+      <div className="relative z-10 w-full mb-6">
+        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+          <motion.div
+            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+        {/* Progress dots */}
+        <div className="flex justify-between items-center px-1">
+          {questions.map((_, idx) => (
+            <div
+              key={idx}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx < currentQuestionIndex
+                  ? 'bg-green-500' // Completed
+                  : idx === currentQuestionIndex
+                  ? 'bg-purple-500 scale-150' // Current
+                  : 'bg-slate-700' // Not started
+              }`}
+              title={`Question ${idx + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Main content */}
@@ -403,8 +421,29 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
             <motion.div key="recording" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center w-full">
               <Avatar isSpeaking={false} isListening={!useManualInput && recordingStarted} size="md" />
               
+              {/* Question reminder - ALWAYS show the question during recording */}
+              <div className="mt-4 mb-4 p-4 rounded-xl bg-slate-800/60 border border-purple-500/30 max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    currentQuestion.type === 'warmup' ? 'bg-blue-500/20 text-blue-300' :
+                    currentQuestion.type === 'roleplay' ? 'bg-pink-500/20 text-pink-300' :
+                    'bg-purple-500/20 text-purple-300'
+                  }`}>
+                    {currentQuestion.type === 'warmup' ? '🌡️ Warm-up' :
+                     currentQuestion.type === 'roleplay' ? '🎭 Role-play' :
+                     '💬 Question'}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                <p className="text-white text-base md:text-lg leading-relaxed text-left">
+                  "{currentQuestion.prompt}"
+                </p>
+              </div>
+              
               {/* Recording indicator */}
-              <div className="mt-6 mb-4">
+              <div className="mt-4 mb-4">
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <div className={`w-4 h-4 rounded-full ${useManualInput ? 'bg-cyan-500' : 'bg-red-500'} animate-pulse`} />
                   <span className={`text-lg font-semibold ${useManualInput ? 'text-cyan-400' : 'text-red-400'}`}>
