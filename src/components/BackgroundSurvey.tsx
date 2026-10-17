@@ -152,7 +152,7 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 relative">
+    <div className="min-h-screen flex flex-col p-6 pb-28 relative">
       {/* Background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
       
@@ -354,28 +354,30 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
         </AnimatePresence>
       </div>
 
-      {/* Navigation */}
-      <div className="relative z-10 max-w-4xl mx-auto w-full mt-8 flex justify-between">
-        <button
-          onClick={() => step > 0 && setStep(step - 1)}
-          className={`px-6 py-3 rounded-xl font-medium transition-all ${
-            step > 0 ? 'text-white bg-slate-800 hover:bg-slate-700 border border-slate-700' : 'text-gray-600 cursor-not-allowed'
-          }`}
-          disabled={step === 0}
-        >
-          ← Back
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={!canProceed()}
-          className={`px-6 py-3 rounded-xl font-medium transition-all ${
-            canProceed()
-              ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-500 hover:to-cyan-500'
-              : 'bg-slate-800 text-gray-600 cursor-not-allowed'
-          }`}
-        >
-          {step === steps.length - 1 ? 'Continue to Self-Assessment →' : 'Next →'}
-        </button>
+      {/* Navigation - Fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800">
+        <div className="max-w-4xl mx-auto w-full px-6 py-4 flex justify-between items-center">
+          <button
+            onClick={() => step > 0 && setStep(step - 1)}
+            className={`px-6 py-3 rounded-xl font-medium transition-all ${
+              step > 0 ? 'text-white bg-slate-800 hover:bg-slate-700 border border-slate-700' : 'text-gray-600 cursor-not-allowed'
+            }`}
+            disabled={step === 0}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!canProceed()}
+            className={`px-6 py-3 rounded-xl font-medium transition-all ${
+              canProceed()
+                ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white hover:from-purple-500 hover:to-cyan-500'
+                : 'bg-slate-800 text-gray-600 cursor-not-allowed'
+            }`}
+          >
+            {step === steps.length - 1 ? 'Continue to Self-Assessment →' : 'Next →'}
+          </button>
+        </div>
       </div>
     </div>
   );

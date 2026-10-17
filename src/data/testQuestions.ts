@@ -488,7 +488,6 @@ const roleplayScenarios: { prompt: string; type: 'roleplay' }[] = [
 
 // Pool of all available topics (user's focus areas)
 const ALL_TOPICS = [
-  'geography',      // domestic travel
   'furniture',      // furniture
   'housing',        // housing
   'music',          // music

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UseSpeechRecognitionReturn {
   transcript: string;
@@ -20,7 +20,8 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const recognitionRef = useRef<any>(null);
   const finalTranscriptRef = useRef('');
   const shouldListenRef = useRef(false);
-  const restartCountRef = useRef(0);
+  const lastResultTimeRef = useRef<number>(Date.now());
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
@@ -28,6 +29,58 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   // Function to get current transcript (always returns latest value)
   const getFinalTranscript = useCallback(() => {
     return finalTranscriptRef.current;
+  }, []);
+
+  // Heartbeat check - if no results for 15 seconds, restart recognition
+  const startHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+    }
+
+    heartbeatIntervalRef.current = setInterval(() => {
+      const timeSinceLastResult = Date.now() - lastResultTimeRef.current;
+      
+      if (shouldListenRef.current && timeSinceLastResult > 15000) {
+        console.warn(`⚠️ No speech results for ${Math.round(timeSinceLastResult / 1000)}s - restarting recognition...`);
+        
+        // Stop current recognition
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch (e) {}
+        }
+        
+        // Create new recognition instance
+        const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition = new SpeechRecognitionAPI();
+        
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
+
+        // Copy event handlers
+        recognition.onresult = recognitionRef.current?.onresult;
+        recognition.onerror = recognitionRef.current?.onerror;
+        recognition.onend = recognitionRef.current?.onend;
+
+        recognitionRef.current = recognition;
+        
+        try {
+          recognition.start();
+          console.log('✅ Recognition restarted due to heartbeat timeout');
+        } catch (e) {
+          console.error('❌ Failed to restart recognition:', e);
+        }
+      }
+    }, 5000); // Check every 5 seconds
+  }, []);
+
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
   }, []);
 
   const createRecognition = useCallback(() => {
@@ -42,6 +95,9 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
+      // Update last result time
+      lastResultTimeRef.current = Date.now();
+      
       let interim = '';
       
       // Process all results from this event
@@ -53,7 +109,11 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
           // Append final result to accumulated transcript
           finalTranscriptRef.current += transcript_text + ' ';
           console.log(`🎤 [Final #${i}] "${transcript_text}" → Total: ${finalTranscriptRef.current.trim().split(/\s+/).length} words`);
-          setTranscript(finalTranscriptRef.current.trim());
+          
+          // Force update transcript state
+          const currentTranscript = finalTranscriptRef.current.trim();
+          setTranscript(currentTranscript);
+          console.log(`📝 Transcript state updated: ${currentTranscript.length} chars`);
         } else {
           // Accumulate interim results
           interim += transcript_text;
@@ -95,55 +155,40 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     };
 
     recognition.onend = () => {
-      console.log(`🎤 Recognition session ended (restart count: ${restartCountRef.current}, current transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words)`);
+      console.log(`🎤 Recognition session ended (current transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words)`);
       
       if (shouldListenRef.current) {
-        restartCountRef.current += 1;
-        
-        // Small delay before restart to avoid race conditions
+        // Small delay before restart
         setTimeout(() => {
           if (shouldListenRef.current) {
             try {
-              // Try to restart the same instance
-              if (recognitionRef.current) {
-                console.log(`🎤 Restarting recognition session #${restartCountRef.current}... (keeping transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words)`);
-                recognitionRef.current.start();
-              } else {
-                throw new Error('Recognition instance is null');
-              }
+              console.log('🔄 Restarting recognition...');
+              recognition.start();
             } catch (e) {
-              console.error('❌ Failed to restart speech recognition:', e);
-              console.log('🔄 Creating new recognition instance...');
-              
-              // Create a new recognition instance
-              // IMPORTANT: Don't reset finalTranscriptRef - keep the accumulated transcript!
-              const currentTranscript = finalTranscriptRef.current;
+              console.error('❌ Failed to restart:', e);
+              // Create new instance
               const newRecognition = createRecognition();
               if (newRecognition) {
                 recognitionRef.current = newRecognition;
                 try {
                   newRecognition.start();
-                  // Sync transcript state to ensure UI shows the preserved transcript
-                  setTranscript(currentTranscript.trim());
-                  console.log(`✅ Created and started new recognition instance (transcript preserved: ${currentTranscript.trim().split(/\s+/).length} words)`);
+                  console.log('✅ Created new recognition instance');
                 } catch (e2) {
-                  console.error('❌ Failed to start new recognition:', e2);
+                  console.error('❌ Failed to start new instance:', e2);
                   setIsListening(false);
                 }
-              } else {
-                console.error('❌ Failed to create new recognition instance');
-                setIsListening(false);
               }
             }
           }
-        }, 200); // Increased delay to 200ms for better stability
+        }, 100);
       } else {
         setIsListening(false);
+        stopHeartbeat();
       }
     };
 
     return recognition;
-  }, [isSupported]);
+  }, [isSupported, stopHeartbeat]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -162,8 +207,8 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     }
 
     // Reset state
-    restartCountRef.current = 0;
     finalTranscriptRef.current = '';
+    lastResultTimeRef.current = Date.now();
     setTranscript('');
     setInterimTranscript('');
     setError(null);
@@ -181,17 +226,19 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     try {
       recognition.start();
       setIsListening(true);
+      startHeartbeat(); // Start heartbeat check
       console.log('✅ Speech recognition started successfully');
     } catch (e) {
       console.error('❌ Failed to start speech recognition:', e);
       setError('Failed to start speech recognition. Please try again or use text input.');
       setIsListening(false);
     }
-  }, [isSupported, createRecognition]);
+  }, [isSupported, createRecognition, startHeartbeat]);
 
   const stopListening = useCallback(() => {
     console.log('🎤 Stopping speech recognition...');
     shouldListenRef.current = false;
+    stopHeartbeat();
     
     if (recognitionRef.current) {
       try {
@@ -206,15 +253,27 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     setInterimTranscript('');
     
     console.log(`✅ Speech recognition stopped. Final transcript: ${finalTranscriptRef.current.trim().split(/\s+/).length} words`);
-  }, []);
+  }, [stopHeartbeat]);
 
   const resetTranscript = useCallback(() => {
     setTranscript('');
     setInterimTranscript('');
     finalTranscriptRef.current = '';
     setError(null);
-    restartCountRef.current = 0;
+    lastResultTimeRef.current = Date.now();
   }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopHeartbeat();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
+  }, [stopHeartbeat]);
 
   return {
     transcript,
