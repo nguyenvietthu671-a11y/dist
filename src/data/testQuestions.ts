@@ -587,6 +587,29 @@ function selectTopics(surveyAnswers: SurveyAnswers): string[] {
   return topics;
 }
 
+// Validation function to ensure all questions come from the bank
+function validateQuestionInBank(prompt: string, type: 'experience' | 'roleplay' | 'followup' | 'warmup'): boolean {
+  // Warmup questions are handled separately
+  if (type === 'warmup') {
+    return true;
+  }
+  
+  // Check if question exists in any topic thread
+  for (const topicKey in topicThreads) {
+    const thread = topicThreads[topicKey];
+    const found = thread.questions.some(q => q.prompt === prompt && q.type === type);
+    if (found) return true;
+  }
+  
+  // Check if it's a role-play scenario
+  if (type === 'roleplay') {
+    const found = roleplayScenarios.some(rp => rp.prompt === prompt);
+    if (found) return true;
+  }
+  
+  return false;
+}
+
 // Generate personalized questions based on survey answers
 export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, formNumber: number): TestQuestion[] {
   const questions: TestQuestion[] = [];
@@ -594,17 +617,29 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
 
   // Select topics based on survey
   const selectedTopics = selectTopics(surveyAnswers);
+  
+  console.log('📋 Selected topics for this test:', selectedTopics);
 
   // For each topic, add 3-5 questions from the topic thread
   selectedTopics.forEach(topicKey => {
     const thread = topicThreads[topicKey];
-    if (!thread) return;
+    if (!thread) {
+      console.warn(`⚠️ Topic "${topicKey}" not found in question bank!`);
+      return;
+    }
 
     // Determine how many questions from this topic based on form level
     const questionCount = formNumber >= 3 ? 5 : formNumber >= 2 ? 4 : 3;
     const threadQuestions = thread.questions.slice(0, questionCount);
 
+    console.log(`📚 Topic "${thread.topic}": Adding ${threadQuestions.length} questions`);
+
     threadQuestions.forEach((q, idx) => {
+      // Validate question is in the bank
+      if (!validateQuestionInBank(q.prompt, q.type)) {
+        console.error(`❌ Question not found in bank: "${q.prompt}"`);
+      }
+      
       questions.push({
         id: `q${questionId++}`,
         prompt: q.prompt,
@@ -621,7 +656,14 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
       .sort(() => Math.random() - 0.5)
       .slice(0, roleplayCount);
 
+    console.log(`🎭 Adding ${selectedRoleplays.length} role-play scenarios`);
+
     selectedRoleplays.forEach(rp => {
+      // Validate role-play is in the bank
+      if (!validateQuestionInBank(rp.prompt, 'roleplay')) {
+        console.error(`❌ Role-play not found in bank: "${rp.prompt}"`);
+      }
+      
       questions.push({
         id: `q${questionId++}`,
         prompt: rp.prompt,
@@ -629,6 +671,16 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
         timeLimit: formNumber >= 3 ? 120 : 90,
       });
     });
+  }
+
+  console.log(`✅ Total questions generated: ${questions.length}`);
+  
+  // Final validation - ensure all questions are from the bank
+  const allValid = questions.every(q => validateQuestionInBank(q.prompt, q.type));
+  if (!allValid) {
+    console.error('❌ VALIDATION FAILED: Some questions are not from the question bank!');
+  } else {
+    console.log('✅ VALIDATION PASSED: All questions are from the question bank');
   }
 
   return questions;
@@ -641,3 +693,19 @@ export const formDescriptions: Record<number, { range: string; label: string }> 
   4: { range: 'Intermediate High to Advanced High', label: 'Form 4 (IH – AH)' },
   5: { range: 'Advanced Mid to Superior', label: 'Form 5 (AL – S)' },
 };
+
+// Export function to get total question count in the bank (for debugging)
+export function getQuestionBankStats(): { totalTopics: number; totalQuestions: number; totalRoleplays: number } {
+  const totalTopics = Object.keys(topicThreads).length;
+  let totalQuestions = 0;
+  
+  for (const topicKey in topicThreads) {
+    totalQuestions += topicThreads[topicKey].questions.length;
+  }
+  
+  return {
+    totalTopics,
+    totalQuestions,
+    totalRoleplays: roleplayScenarios.length,
+  };
+}

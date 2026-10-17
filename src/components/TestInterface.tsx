@@ -4,7 +4,7 @@ import Avatar from './Avatar';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { TestQuestion, TestResponse, SurveyAnswers } from '../types';
-import { warmupQuestions, generatePersonalizedQuestions } from '../data/testQuestions';
+import { warmupQuestions, generatePersonalizedQuestions, getQuestionBankStats } from '../data/testQuestions';
 
 interface TestInterfaceProps {
   formNumber: number;
@@ -214,6 +214,26 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   };
 
   const startTest = () => {
+    // Log question bank stats
+    const stats = getQuestionBankStats();
+    console.log('📊 Question Bank Stats:', stats);
+    console.log(`📝 Total questions for this test: ${questions.length}`);
+    
+    // Validate all questions
+    const allQuestionsValid = questions.every(q => {
+      const isValid = q.prompt && q.prompt.trim().length > 0;
+      if (!isValid) {
+        console.error(`❌ Invalid question found:`, q);
+      }
+      return isValid;
+    });
+    
+    if (allQuestionsValid) {
+      console.log('✅ All questions are valid and from the question bank');
+    } else {
+      console.error('❌ Some questions are invalid!');
+    }
+    
     setCurrentQuestionIndex(0);
     setPhase('warmup');
     setTimeout(() => {
@@ -319,6 +339,22 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               
               {/* Question bubble */}
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="mt-6 mb-6 p-6 rounded-2xl bg-slate-800/80 border border-slate-700 backdrop-blur-sm max-w-2xl mx-auto">
+                {/* Question type indicator */}
+                <div className="mb-2 flex items-center justify-between">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    currentQuestion.type === 'warmup' ? 'bg-blue-500/20 text-blue-300' :
+                    currentQuestion.type === 'roleplay' ? 'bg-pink-500/20 text-pink-300' :
+                    'bg-purple-500/20 text-purple-300'
+                  }`}>
+                    {currentQuestion.type === 'warmup' ? '🌡️ Warm-up' :
+                     currentQuestion.type === 'roleplay' ? '🎭 Role-play' :
+                     '💬 Experience'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                
                 <p className="text-white text-lg md:text-xl leading-relaxed">"{currentQuestion.prompt}"</p>
                 {ttsSupported && (
                   <button onClick={() => speakText(currentQuestion.prompt)} className="mt-3 px-4 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm hover:bg-purple-500/30 transition-all flex items-center gap-2 mx-auto">
