@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from './Avatar';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { TestQuestion, TestResponse, SurveyAnswers } from '../types';
-import { warmupQuestion, generatePersonalizedQuestions } from '../data/testQuestions';
+import { warmupQuestions, generatePersonalizedQuestions, getQuestionBankStats } from '../data/testQuestions';
 
 interface TestInterfaceProps {
   formNumber: number;
@@ -26,6 +26,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const [manualText, setManualText] = useState('');
   const [useManualInput, setUseManualInput] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -36,19 +37,21 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const currentQuestionRef = useRef<TestQuestion | null>(null);
   const currentQuestionIndexRef = useRef(-1);
   const manualTextRef = useRef('');
+  const useManualInputRef = useRef(false);
 
-  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported } = useSpeechRecognition();
+  const { transcript, interimTranscript, isListening, startListening, stopListening, resetTranscript, isSupported, getFinalTranscript, error } = useSpeechRecognition();
   const { speak: speakText, cancel: cancelSpeech, isSpeaking: ttsSpeaking, isSupported: ttsSupported } = useSpeechSynthesis();
 
   // Generate personalized questions based on survey answers
   const personalizedQuestions = useRef(generatePersonalizedQuestions(surveyAnswers, formNumber));
-  const questions: TestQuestion[] = [warmupQuestion, ...personalizedQuestions.current];
+  const questions: TestQuestion[] = [...warmupQuestions, ...personalizedQuestions.current];
   const currentQuestion = currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null;
 
   // Keep refs in sync
   useEffect(() => { responsesRef.current = responses; }, [responses]);
   useEffect(() => { currentQuestionRef.current = currentQuestion; currentQuestionIndexRef.current = currentQuestionIndex; }, [currentQuestion, currentQuestionIndex]);
   useEffect(() => { manualTextRef.current = manualText; }, [manualText]);
+  useEffect(() => { useManualInputRef.current = useManualInput; }, [useManualInput]);
 
   // Timer for question display countdown
   useEffect(() => {
@@ -109,7 +112,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
         setRecordingTime(recordingTimeRef.current);
         
         if (recordingTimeRef.current >= currentQuestion.timeLimit) {
-          doStopRecording();
+          handleStopRecording();
         }
       }, 1000);
     }
@@ -146,26 +149,40 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
     }
   }, [ttsSpeaking, ttsSupported, phase]);
 
-  const doStopRecording = useCallback(() => {
+  const handleStopRecording = async () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
 
-    if (!useManualInput) {
-      stopListening();
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      }
-    }
+    setIsProcessing(true);
 
+    const isManualMode = useManualInputRef.current;
     const q = currentQuestionRef.current;
     const qIndex = currentQuestionIndexRef.current;
     
     if (q) {
-      // Use manual text if available, otherwise use speech transcript
-      const finalTranscript = useManualInput ? manualTextRef.current : transcript;
+      let finalTranscript = '';
+      
+      if (isManualMode) {
+        // Text mode - get immediately
+        finalTranscript = manualTextRef.current;
+      } else {
+        // Voice mode - stop recording first
+        stopListening();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Wait 2 seconds for speech recognition to finalize
+        console.log('⏳ Waiting for speech recognition to finalize...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Get the final transcript
+        finalTranscript = getFinalTranscript();
+        console.log('✅ Final transcript retrieved:', finalTranscript.length, 'characters');
+      }
       
       const audioBlob = audioChunksRef.current.length > 0 
         ? new Blob(audioChunksRef.current, { type: 'audio/webm' })
@@ -174,7 +191,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
       const response: TestResponse = {
         questionIndex: qIndex,
         question: q.prompt,
-        transcript: finalTranscript,
+        transcript: finalTranscript.trim(),
         audioBlob,
         duration: recordingTimeRef.current,
         timestamp: Date.now(),
@@ -183,12 +200,9 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
       setResponses(prev => [...prev, response]);
     }
 
+    setIsProcessing(false);
     setPhase('review');
     setShowTranscript(true);
-  }, [transcript, stopListening, useManualInput]);
-
-  const handleStopRecording = () => {
-    doStopRecording();
   };
 
   const handleNextQuestion = () => {
@@ -212,6 +226,26 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   };
 
   const startTest = () => {
+    // Log question bank stats
+    const stats = getQuestionBankStats();
+    console.log('📊 Question Bank Stats:', stats);
+    console.log(`📝 Total questions for this test: ${questions.length}`);
+    
+    // Validate all questions
+    const allQuestionsValid = questions.every(q => {
+      const isValid = q.prompt && q.prompt.trim().length > 0;
+      if (!isValid) {
+        console.error(`❌ Invalid question found:`, q);
+      }
+      return isValid;
+    });
+    
+    if (allQuestionsValid) {
+      console.log('✅ All questions are valid and from the question bank');
+    } else {
+      console.error('❌ Some questions are invalid!');
+    }
+    
     setCurrentQuestionIndex(0);
     setPhase('warmup');
     setTimeout(() => {
@@ -261,13 +295,31 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="relative z-10 w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-6">
-        <motion.div
-          className="h-full bg-gradient-to-r from-purple-500 to-cyan-500"
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5 }}
-        />
+      {/* Progress bar with dots */}
+      <div className="relative z-10 w-full mb-6">
+        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+          <motion.div
+            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+        {/* Progress dots */}
+        <div className="flex justify-between items-center px-1">
+          {questions.map((_, idx) => (
+            <div
+              key={idx}
+              className={`w-2 h-2 rounded-full transition-all ${
+                idx < currentQuestionIndex
+                  ? 'bg-green-500' // Completed
+                  : idx === currentQuestionIndex
+                  ? 'bg-purple-500 scale-150' // Current
+                  : 'bg-slate-700' // Not started
+              }`}
+              title={`Question ${idx + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Main content */}
@@ -317,6 +369,22 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               
               {/* Question bubble */}
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="mt-6 mb-6 p-6 rounded-2xl bg-slate-800/80 border border-slate-700 backdrop-blur-sm max-w-2xl mx-auto">
+                {/* Question type indicator */}
+                <div className="mb-2 flex items-center justify-between">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    currentQuestion.type === 'warmup' ? 'bg-blue-500/20 text-blue-300' :
+                    currentQuestion.type === 'roleplay' ? 'bg-pink-500/20 text-pink-300' :
+                    'bg-purple-500/20 text-purple-300'
+                  }`}>
+                    {currentQuestion.type === 'warmup' ? '🌡️ Warm-up' :
+                     currentQuestion.type === 'roleplay' ? '🎭 Role-play' :
+                     '💬 Experience'}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                
                 <p className="text-white text-lg md:text-xl leading-relaxed">"{currentQuestion.prompt}"</p>
                 {ttsSupported && (
                   <button onClick={() => speakText(currentQuestion.prompt)} className="mt-3 px-4 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm hover:bg-purple-500/30 transition-all flex items-center gap-2 mx-auto">
@@ -353,12 +421,38 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
             <motion.div key="recording" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center w-full">
               <Avatar isSpeaking={false} isListening={!useManualInput && recordingStarted} size="md" />
               
+              {/* Question reminder - ALWAYS show the question during recording */}
+              <div className="mt-4 mb-4 p-4 rounded-xl bg-slate-800/60 border border-purple-500/30 max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    currentQuestion.type === 'warmup' ? 'bg-blue-500/20 text-blue-300' :
+                    currentQuestion.type === 'roleplay' ? 'bg-pink-500/20 text-pink-300' :
+                    'bg-purple-500/20 text-purple-300'
+                  }`}>
+                    {currentQuestion.type === 'warmup' ? '🌡️ Warm-up' :
+                     currentQuestion.type === 'roleplay' ? '🎭 Role-play' :
+                     '💬 Question'}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                <p className="text-white text-base md:text-lg leading-relaxed text-left">
+                  "{currentQuestion.prompt}"
+                </p>
+              </div>
+              
               {/* Recording indicator */}
-              <div className="mt-6 mb-4 flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-400 font-medium">
-                  {useManualInput ? 'Type your answer...' : 'Recording...'}
-                </span>
+              <div className="mt-4 mb-4">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className={`w-4 h-4 rounded-full ${useManualInput ? 'bg-cyan-500' : 'bg-red-500'} animate-pulse`} />
+                  <span className={`text-lg font-semibold ${useManualInput ? 'text-cyan-400' : 'text-red-400'}`}>
+                    {useManualInput ? '⌨️ Typing Mode' : '🎤 Recording...'}
+                  </span>
+                </div>
+                {!useManualInput && (
+                  <p className="text-gray-500 text-sm">Speak clearly into your microphone</p>
+                )}
               </div>
 
               {/* Waveform visualization (voice mode only) */}
@@ -390,29 +484,60 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
 
               {/* Voice transcript (live) - always show when in voice mode */}
               {!useManualInput && (
-                <div className="max-w-2xl mx-auto mb-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left">
+                <div className={`max-w-2xl mx-auto mb-4 p-4 rounded-xl border text-left transition-all ${
+                  isListening 
+                    ? 'bg-slate-800/50 border-green-500/30' 
+                    : 'bg-slate-800/30 border-slate-700/50'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-green-400 font-medium">🎤 Speech-to-Text (Live):</p>
+                    <div className="flex items-center gap-2">
+                      {isListening && (
+                        <div className="flex gap-0.5">
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                          <div className="w-1 h-3 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      )}
+                      <p className={`text-xs font-medium ${isListening ? 'text-green-400' : 'text-gray-500'}`}>
+                        🎤 Speech-to-Text {isListening ? '(Live)' : '(Paused)'}
+                      </p>
+                    </div>
                     <span className="text-xs text-gray-500">
                       {(transcript + ' ' + interimTranscript).trim().split(/\s+/).filter(w => w).length} words
                     </span>
                   </div>
+                  
                   {transcript || interimTranscript ? (
-                    <div>
+                    <div className="min-h-[60px]">
                       <p className="text-gray-300 text-sm leading-relaxed">
                         {transcript}
-                        {interimTranscript && <span className="text-gray-500 italic">{interimTranscript}</span>}
+                        {interimTranscript && (
+                          <span className="text-cyan-400/70 italic"> {interimTranscript}</span>
+                        )}
+                        {isListening && <span className="inline-block w-0.5 h-4 bg-cyan-400 animate-pulse ml-0.5" />}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm italic">
-                      {isListening ? '🎙️ Listening... Start speaking now' : '⏳ Waiting for microphone...'}
-                    </p>
+                    <div className="min-h-[60px] flex items-center justify-center">
+                      <p className="text-gray-600 text-sm italic">
+                        {isListening ? '🎙️ Listening... Start speaking now' : '⏳ Waiting for microphone...'}
+                      </p>
+                    </div>
                   )}
+                  
                   {isListening && (
-                    <div className="mt-2 flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                      <span className="text-xs text-green-400">Microphone active - speak clearly</span>
+                    <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        <span className="text-xs text-green-400">Microphone active</span>
+                      </div>
+                      <span className="text-xs text-gray-500">Speak clearly into your microphone</span>
+                    </div>
+                  )}
+                  
+                  {error && (
+                    <div className="mt-2 pt-2 border-t border-amber-500/30">
+                      <p className="text-xs text-amber-400">⚠️ {error}</p>
                     </div>
                   )}
                 </div>
@@ -451,10 +576,24 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               {/* Stop button */}
               <button
                 onClick={handleStopRecording}
-                className="px-8 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 transition-all flex items-center gap-2 mx-auto"
+                disabled={isProcessing}
+                className={`px-8 py-3 rounded-xl font-semibold text-white transition-all flex items-center gap-2 mx-auto ${
+                  isProcessing 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'
+                }`}
               >
-                <div className="w-4 h-4 rounded-sm bg-white" />
-                Submit Answer
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Processing Transcript...
+                  </>
+                ) : (
+                  <>
+                    <div className="w-4 h-4 rounded-sm bg-white" />
+                    Submit Answer
+                  </>
+                )}
               </button>
 
               {!recordingStarted && !useManualInput && (

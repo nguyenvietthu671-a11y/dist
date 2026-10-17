@@ -66,80 +66,159 @@ function calculateFunctionScore(responses: TestResponse[]): number {
   let score = 0;
   const totalResponses = responses.length;
   
+  if (totalResponses === 0) return 0;
+  
   responses.forEach(r => {
     const text = r.transcript;
-    if (hasNarration(text)) score += 10;
+    if (!text || text.trim().length === 0) return;
+    
+    // Narration (past tense storytelling) - key for Intermediate/Advanced
+    if (hasNarration(text)) score += 12;
+    
+    // Description (detailed descriptions) - key for all levels
     if (hasDescription(text)) score += 10;
-    if (hasOpinions(text)) score += 8;
-    if (hasAbstractTopics(text)) score += 7;
-    if (hasConnectors(text)) score += 5;
+    
+    // Opinions with support - key for Advanced
+    if (hasOpinions(text)) score += 10;
+    
+    // Abstract topics - key for Advanced High/Superior
+    if (hasAbstractTopics(text)) score += 8;
+    
+    // Connectors and cohesive devices - key for paragraph-level discourse
+    if (hasConnectors(text)) score += 8;
+    
+    // Questions asked (shows interaction ability)
+    if (/\?/.test(text)) score += 3;
+    
+    // Hypothetical situations (Advanced High+)
+    if (/would|could|if i|imagine/i.test(text)) score += 5;
   });
   
-  return Math.min(100, Math.round((score / (totalResponses * 40)) * 100));
+  // Normalize to 100
+  const maxPossible = totalResponses * 56; // Max points per response
+  return Math.min(100, Math.round((score / maxPossible) * 100));
 }
 
 function calculateAccuracyScore(responses: TestResponse[]): number {
-  let score = 50; // Base score
+  let score = 40; // Base score
+  const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
-  responses.forEach(r => {
+  if (validResponses.length === 0) return 0;
+  
+  validResponses.forEach(r => {
     const wordCount = countWords(r.transcript);
     const sentenceCount = countSentences(r.transcript);
     
-    // Fluency indicator: words per second
-    const wps = wordCount / Math.max(r.duration, 1);
-    if (wps >= 1.5 && wps <= 3) score += 8; // Good fluency
-    else if (wps >= 1 && wps <= 4) score += 4; // Acceptable
+    if (wordCount === 0 || r.duration === 0) return;
     
-    // Sentence complexity
+    // Fluency indicator: words per second (natural speech is 2-3 wps)
+    const wps = wordCount / r.duration;
+    if (wps >= 1.8 && wps <= 3.5) score += 10; // Excellent fluency
+    else if (wps >= 1.2 && wps <= 4) score += 6; // Good fluency
+    else if (wps >= 0.8) score += 3; // Acceptable
+    
+    // Sentence complexity (longer sentences = more advanced)
     if (sentenceCount > 0) {
       const avgWordsPerSentence = wordCount / sentenceCount;
-      if (avgWordsPerSentence >= 8 && avgWordsPerSentence <= 20) score += 7;
-      else if (avgWordsPerSentence >= 5) score += 3;
+      if (avgWordsPerSentence >= 10 && avgWordsPerSentence <= 25) score += 8; // Complex sentences
+      else if (avgWordsPerSentence >= 7 && avgWordsPerSentence <= 30) score += 5; // Good sentences
+      else if (avgWordsPerSentence >= 5) score += 2; // Basic sentences
     }
     
-    // Content length
-    if (wordCount >= AL_CRITERIA.idealWordCount) score += 10;
-    else if (wordCount >= AL_CRITERIA.minWordCount) score += 5;
+    // Content length (more content = better)
+    if (wordCount >= 150) score += 10; // Excellent length
+    else if (wordCount >= 100) score += 7; // Good length
+    else if (wordCount >= 60) score += 4; // Acceptable length
+    else if (wordCount >= 30) score += 2; // Minimal
+    
+    // Duration (speaking longer shows confidence)
+    if (r.duration >= 60) score += 5;
+    else if (r.duration >= 40) score += 3;
+    else if (r.duration >= 20) score += 1;
   });
   
   return Math.min(100, score);
 }
 
 function calculateContentScore(responses: TestResponse[]): number {
-  let score = 40; // Base
+  let score = 30; // Base
+  const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
-  responses.forEach(r => {
+  if (validResponses.length === 0) return 0;
+  
+  validResponses.forEach(r => {
     const wordCount = countWords(r.transcript);
-    if (wordCount >= AL_CRITERIA.minWordCount) score += 8;
-    if (wordCount >= AL_CRITERIA.idealWordCount) score += 5;
-    if (r.duration >= AL_CRITERIA.minDuration) score += 5;
-    if (r.duration >= AL_CRITERIA.idealDuration) score += 3;
+    const question = r.question.toLowerCase();
     
-    // Relevance check - longer responses tend to be more on-topic
-    if (r.transcript.length > 200) score += 4;
+    // Relevance: Check if response addresses the question
+    const questionWords = question.split(/\s+/).filter(w => w.length > 3);
+    const responseWords = r.transcript.toLowerCase();
+    const relevanceScore = questionWords.filter(qw => responseWords.includes(qw)).length;
+    
+    if (relevanceScore >= 3) score += 12; // Highly relevant
+    else if (relevanceScore >= 2) score += 8; // Somewhat relevant
+    else if (relevanceScore >= 1) score += 4; // Minimally relevant
+    
+    // Specificity: Detailed responses with examples
+    if (/\d+/.test(r.transcript)) score += 5; // Contains numbers/specifics
+    if (/for example|such as|like|specifically/i.test(r.transcript)) score += 6; // Examples
+    if (/because|since|due to|the reason/i.test(r.transcript)) score += 5; // Explanations
+    
+    // Content depth
+    if (wordCount >= 120) score += 8;
+    else if (wordCount >= 80) score += 5;
+    else if (wordCount >= 50) score += 3;
+    
+    // Duration shows engagement
+    if (r.duration >= 50) score += 4;
+    else if (r.duration >= 30) score += 2;
   });
   
   return Math.min(100, score);
 }
 
 function calculateTextTypeScore(responses: TestResponse[]): number {
-  let score = 30; // Base
+  let score = 25; // Base
+  const validResponses = responses.filter(r => r.transcript && r.transcript.trim().length > 0);
   
-  const allText = responses.map(r => r.transcript).join(' ');
+  if (validResponses.length === 0) return 0;
   
-  // Paragraph-level production
-  const sentenceCount = countSentences(allText);
-  if (sentenceCount >= 8) score += 15;
-  else if (sentenceCount >= 4) score += 8;
+  const allText = validResponses.map(r => r.transcript).join(' ');
+  const totalSentences = countSentences(allText);
+  const totalWords = countWords(allText);
   
-  // Connected discourse
-  if (hasConnectors(allText)) score += 15;
+  // Paragraph-level production (connected sentences)
+  if (totalSentences >= 15) score += 15; // Excellent
+  else if (totalSentences >= 10) score += 12; // Good
+  else if (totalSentences >= 6) score += 8; // Acceptable
+  else if (totalSentences >= 3) score += 4; // Basic
   
-  // Multiple paragraph-level descriptions
-  if (hasNarration(allText) && hasDescription(allText)) score += 15;
+  // Connected discourse with cohesive devices
+  const connectorCount = (allText.match(/\b(because|however|although|therefore|moreover|furthermore|in addition|on the other hand|for example|as a result|consequently|nevertheless|while|since|despite|first|then|finally|next|also)\b/gi) || []).length;
   
-  // Organization
-  if (sentenceCount >= 6) score += 10;
+  if (connectorCount >= 8) score += 15; // Excellent cohesion
+  else if (connectorCount >= 5) score += 12; // Good cohesion
+  else if (connectorCount >= 3) score += 8; // Some cohesion
+  else if (connectorCount >= 1) score += 4; // Minimal cohesion
+  
+  // Multiple text types (narration + description + opinion)
+  const hasNarr = hasNarration(allText);
+  const hasDesc = hasDescription(allText);
+  const hasOpin = hasOpinions(allText);
+  const textTypeCount = [hasNarr, hasDesc, hasOpin].filter(Boolean).length;
+  
+  if (textTypeCount >= 3) score += 15; // All three types
+  else if (textTypeCount >= 2) score += 10; // Two types
+  else if (textTypeCount >= 1) score += 5; // One type
+  
+  // Organization indicators
+  if (/first|second|third|finally|in conclusion|to summarize/i.test(allText)) score += 8;
+  if (/on the one hand|on the other hand|in contrast|similarly/i.test(allText)) score += 7;
+  
+  // Overall length and complexity
+  if (totalWords >= 500) score += 10;
+  else if (totalWords >= 300) score += 7;
+  else if (totalWords >= 150) score += 4;
   
   return Math.min(100, score);
 }
@@ -147,36 +226,48 @@ function calculateTextTypeScore(responses: TestResponse[]): number {
 function generateFeedback(result: { functionScore: number; accuracyScore: number; contentScore: number; textTypeScore: number }): string[] {
   const feedback: string[] = [];
   
-  if (result.functionScore < 60) {
-    feedback.push("Your responses need more functional variety. Practice narrating events in past tense and describing people, places, and experiences in detail.");
-  } else if (result.functionScore < 75) {
-    feedback.push("Good functional range! Work on consistently using narration and description together in your responses.");
+  // Function feedback
+  if (result.functionScore < 50) {
+    feedback.push("⚠️ Function: Your responses lack variety in language functions. Focus on narrating past events, describing in detail, and supporting your opinions with reasons.");
+  } else if (result.functionScore < 70) {
+    feedback.push("✓ Function: Good range of language functions. To improve, consistently combine narration and description in single responses.");
+  } else if (result.functionScore < 85) {
+    feedback.push("✓ Function: Strong functional range! You effectively narrate, describe, and support opinions. Work on handling hypothetical situations.");
   } else {
-    feedback.push("Excellent functional range! You demonstrate strong ability to narrate, describe, and support opinions.");
+    feedback.push("✓ Function: Excellent! You demonstrate advanced ability to narrate, describe, support opinions, and discuss abstract topics.");
   }
   
-  if (result.accuracyScore < 50) {
-    feedback.push("Focus on fluency and sentence length. Try to speak in longer, more connected sentences rather than short fragments.");
-  } else if (result.accuracyScore < 70) {
-    feedback.push("Your accuracy is developing well. Continue working on complex sentence structures and varied vocabulary.");
+  // Accuracy feedback
+  if (result.accuracyScore < 45) {
+    feedback.push("⚠️ Accuracy: Focus on speaking in complete sentences. Practice longer responses (45-60 seconds) with natural pacing (2-3 words per second).");
+  } else if (result.accuracyScore < 65) {
+    feedback.push("✓ Accuracy: Developing well. Work on complex sentence structures and varied vocabulary. Aim for 10-15 words per sentence.");
+  } else if (result.accuracyScore < 80) {
+    feedback.push("✓ Accuracy: Strong! Your fluency and sentence complexity are good. Continue expanding vocabulary and refining pronunciation.");
   } else {
-    feedback.push("Strong accuracy! Your vocabulary and grammar support clear communication at this level.");
+    feedback.push("✓ Accuracy: Excellent! Your speech is fluent, well-structured, and demonstrates strong control of grammar and vocabulary.");
   }
   
-  if (result.contentScore < 50) {
-    feedback.push("Your responses are too brief. Aim for at least 30 seconds of speaking per question with specific details and examples.");
-  } else if (result.contentScore < 70) {
-    feedback.push("Good content development. Add more specific examples and personal experiences to strengthen your responses.");
+  // Content feedback
+  if (result.contentScore < 45) {
+    feedback.push("⚠️ Content: Responses are too brief or off-topic. Address the question directly with specific details, examples, and explanations.");
+  } else if (result.contentScore < 65) {
+    feedback.push("✓ Content: Good relevance. Strengthen responses with more specific examples, numbers, and personal experiences.");
+  } else if (result.contentScore < 80) {
+    feedback.push("✓ Content: Well-developed! You provide relevant details and examples. Work on deeper explanations and analysis.");
   } else {
-    feedback.push("Well-developed content! You provide appropriate detail and stay on topic effectively.");
+    feedback.push("✓ Content: Excellent! Your responses are highly relevant, detailed, and well-supported with specific examples.");
   }
   
-  if (result.textTypeScore < 50) {
-    feedback.push("Work on producing connected paragraphs. Use linking words like 'because,' 'however,' 'in addition,' and 'for example' to connect your ideas.");
-  } else if (result.textTypeScore < 70) {
-    feedback.push("Good paragraph-level production. Focus on organizing your ideas with clear topic sentences and supporting details.");
+  // Text type feedback
+  if (result.textTypeScore < 45) {
+    feedback.push("⚠️ Text Type: Use connecting words (because, however, for example, in addition) to link ideas into connected paragraphs.");
+  } else if (result.textTypeScore < 65) {
+    feedback.push("✓ Text Type: Good paragraph-level discourse. Organize ideas with clear structure: topic sentence, supporting details, conclusion.");
+  } else if (result.textTypeScore < 80) {
+    feedback.push("✓ Text Type: Strong organization! You use cohesive devices effectively. Work on varying your text types (narration, description, opinion).");
   } else {
-    feedback.push("Excellent text organization! Your discourse is well-structured with clear connections between ideas.");
+    feedback.push("✓ Text Type: Excellent! Your discourse is well-organized with sophisticated use of cohesive devices and multiple text types.");
   }
   
   return feedback;
@@ -185,34 +276,83 @@ function generateFeedback(result: { functionScore: number; accuracyScore: number
 function generateSuggestions(result: { overallScore: number; functionScore: number; accuracyScore: number; contentScore: number; textTypeScore: number; passed: boolean }): string[] {
   const suggestions: string[] = [];
   
+  // Overall level guidance
   if (!result.passed) {
-    suggestions.push("🎯 Target: Advanced Low requires paragraph-level narration and description in past and present tenses.");
-    suggestions.push("📝 Practice narrating stories from your past using past tense verbs (went, saw, experienced, felt).");
-    suggestions.push("🗣️ Record yourself speaking for 60-90 seconds on familiar topics. Listen back and identify areas for improvement.");
-    suggestions.push("📚 Learn and use transition words: 'first,' 'then,' 'after that,' 'finally,' 'however,' 'on the other hand.'");
-    suggestions.push("🎬 Watch English movies/series and practice summarizing plots using narration and description.");
-    suggestions.push("💬 Find a language partner and practice describing your daily experiences in detail.");
-    suggestions.push("📖 Read articles and practice expressing opinions with supporting reasons.");
+    if (result.overallScore < 40) {
+      suggestions.push("🎯 Current Level: Novice/Early Intermediate. Target: Advanced Low (65+ points)");
+      suggestions.push("📝 Priority: Build sentence-level fluency. Practice speaking in complete sentences for 30-45 seconds.");
+    } else if (result.overallScore < 55) {
+      suggestions.push("🎯 Current Level: Intermediate. Target: Advanced Low (65+ points)");
+      suggestions.push("📝 Priority: Develop paragraph-level discourse. Connect 4-6 sentences with transition words.");
+    } else {
+      suggestions.push("🎯 Current Level: High Intermediate. Target: Advanced Low (65+ points)");
+      suggestions.push("📝 Priority: Master narration in past tense and description with detailed examples.");
+    }
   } else {
-    suggestions.push("🌟 Congratulations! You've demonstrated Advanced Low proficiency!");
-    suggestions.push("📈 To advance to Advanced Mid, practice handling complications in narration (unexpected events, problems).");
-    suggestions.push("🎯 Work on supporting your opinions with detailed examples and evidence.");
-    suggestions.push("📚 Expand your vocabulary to discuss more abstract and hypothetical topics.");
-    suggestions.push("💡 Practice the 'describe-narrate-opine' pattern: describe a situation, narrate what happened, then share your opinion.");
+    suggestions.push("🌟 Congratulations! You've achieved Advanced Low proficiency!");
+    if (result.overallScore < 75) {
+      suggestions.push("📈 Next Target: Advanced Mid (75+ points). Focus on handling complications and supporting opinions.");
+    } else {
+      suggestions.push("📈 Next Target: Advanced High (82+ points). Work on abstract topics and hypothetical situations.");
+    }
   }
   
-  if (result.functionScore < 70) {
-    suggestions.push("🔧 Function Focus: Practice these patterns daily - 'I remember when...', 'The reason I like this is...', 'In my experience...'");
+  // Specific skill improvements based on lowest scores
+  const scores = [
+    { name: 'Function', score: result.functionScore },
+    { name: 'Accuracy', score: result.accuracyScore },
+    { name: 'Content', score: result.contentScore },
+    { name: 'Text Type', score: result.textTypeScore },
+  ].sort((a, b) => a.score - b.score);
+  
+  const weakest = scores[0];
+  const secondWeakest = scores[1];
+  
+  // Weakest area suggestions
+  if (weakest.name === 'Function') {
+    suggestions.push("🔧 Priority - Function: Practice these daily patterns:");
+    suggestions.push("   • Narration: 'Last week, I went to... First, I... Then, I... Finally, I...'");
+    suggestions.push("   • Description: 'It was a [adjective] place with [details]. The most interesting part was...'");
+    suggestions.push("   • Opinion: 'I think/believe [opinion] because [reason 1] and [reason 2].'");
+  } else if (weakest.name === 'Accuracy') {
+    suggestions.push("🔧 Priority - Accuracy: Improve fluency and sentence structure:");
+    suggestions.push("   • Shadowing: Listen to native speakers and repeat after them for 10 minutes daily");
+    suggestions.push("   • Record yourself: Speak for 60 seconds, listen back, identify areas to improve");
+    suggestions.push("   • Sentence expansion: Start with simple sentences, add details gradually");
+  } else if (weakest.name === 'Content') {
+    suggestions.push("🔧 Priority - Content: Provide more specific details:");
+    suggestions.push("   • Use the 5 W's: Who, What, When, Where, Why in every response");
+    suggestions.push("   • Add examples: 'For example...', 'Such as...', 'Like when I...'");
+    suggestions.push("   • Include numbers: 'I've been doing this for 3 years', 'There were 5 people'");
+  } else if (weakest.name === 'Text Type') {
+    suggestions.push("🔧 Priority - Text Type: Improve organization and cohesion:");
+    suggestions.push("   • Use transitions: 'First...', 'However...', 'In addition...', 'For example...', 'As a result...'");
+    suggestions.push("   • Structure: Topic sentence → Supporting details → Conclusion");
+    suggestions.push("   • Practice: Write outlines before speaking to organize your thoughts");
   }
-  if (result.accuracyScore < 70) {
-    suggestions.push("🔧 Accuracy Focus: Shadow English speakers (repeat after them) to improve pronunciation and natural rhythm.");
+  
+  // Second weakest area
+  if (secondWeakest.name !== weakest.name && secondWeakest.score < 70) {
+    suggestions.push("");
+    suggestions.push(`📚 Also improve - ${secondWeakest.name}:`);
+    if (secondWeakest.name === 'Function') {
+      suggestions.push("   • Mix narration and description: Tell a story AND describe the setting/people");
+    } else if (secondWeakest.name === 'Accuracy') {
+      suggestions.push("   • Practice complex sentences: Use 'although', 'because', 'while', 'despite'");
+    } else if (secondWeakest.name === 'Content') {
+      suggestions.push("   • Answer completely: Address all parts of the question with specific details");
+    } else if (secondWeakest.name === 'Text Type') {
+      suggestions.push("   • Connect ideas: Use 'therefore', 'consequently', 'on the other hand'");
+    }
   }
-  if (result.contentScore < 70) {
-    suggestions.push("🔧 Content Focus: Use the STAR method - Situation, Task, Action, Result - to structure your responses.");
-  }
-  if (result.textTypeScore < 70) {
-    suggestions.push("🔧 Text Type Focus: Practice connecting 4-5 sentences into a coherent paragraph with a clear main idea.");
-  }
+  
+  // General practice tips
+  suggestions.push("");
+  suggestions.push("💡 Daily Practice Routine:");
+  suggestions.push("   • Morning: Describe your plans for the day (30 seconds)");
+  suggestions.push("   • Afternoon: Narrate something that happened (45 seconds)");
+  suggestions.push("   • Evening: Share your opinion on a topic (60 seconds)");
+  suggestions.push("   • Weekly: Record a 2-minute response and review it");
   
   return suggestions;
 }
