@@ -4,7 +4,7 @@ import Avatar from './Avatar';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import { TestQuestion, TestResponse, SurveyAnswers } from '../types';
-import { warmupQuestion, generatePersonalizedQuestions } from '../data/testQuestions';
+import { warmupQuestions, generatePersonalizedQuestions } from '../data/testQuestions';
 
 interface TestInterfaceProps {
   formNumber: number;
@@ -42,7 +42,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
 
   // Generate personalized questions based on survey answers
   const personalizedQuestions = useRef(generatePersonalizedQuestions(surveyAnswers, formNumber));
-  const questions: TestQuestion[] = [warmupQuestion, ...personalizedQuestions.current];
+  const questions: TestQuestion[] = [...warmupQuestions, ...personalizedQuestions.current];
   const currentQuestion = currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null;
 
   // Keep refs in sync
@@ -354,11 +354,16 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               <Avatar isSpeaking={false} isListening={!useManualInput && recordingStarted} size="md" />
               
               {/* Recording indicator */}
-              <div className="mt-6 mb-4 flex items-center justify-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-400 font-medium">
-                  {useManualInput ? 'Type your answer...' : 'Recording...'}
-                </span>
+              <div className="mt-6 mb-4">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <div className={`w-4 h-4 rounded-full ${useManualInput ? 'bg-cyan-500' : 'bg-red-500'} animate-pulse`} />
+                  <span className={`text-lg font-semibold ${useManualInput ? 'text-cyan-400' : 'text-red-400'}`}>
+                    {useManualInput ? '⌨️ Typing Mode' : '🎤 Recording...'}
+                  </span>
+                </div>
+                {!useManualInput && (
+                  <p className="text-gray-500 text-sm">Speak clearly into your microphone</p>
+                )}
               </div>
 
               {/* Waveform visualization (voice mode only) */}
