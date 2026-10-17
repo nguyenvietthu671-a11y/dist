@@ -1,16 +1,10 @@
 import { TestQuestion, SurveyAnswers } from '../types';
 
-// Warm-up questions (2-3 questions to get comfortable)
+// Warm-up question (only 1 question)
 export const warmupQuestions: TestQuestion[] = [
   {
     id: 'warmup1',
     prompt: "Let's start the interview now. Tell me something about yourself.",
-    type: 'warmup',
-    timeLimit: 60,
-  },
-  {
-    id: 'warmup2',
-    prompt: "What did you do yesterday?",
     type: 'warmup',
     timeLimit: 60,
   },
@@ -493,98 +487,20 @@ const roleplayScenarios: { prompt: string; type: 'roleplay' }[] = [
 ];
 
 // Determine which topics to use based on survey answers
+// Focus on user's requested topics: domestic travel, furniture, housing, music, movies, family, technology
 function selectTopics(surveyAnswers: SurveyAnswers): string[] {
-  const topics: string[] = [];
+  // Core topics that user wants to focus on
+  const coreTopics = [
+    'geography',      // domestic travel
+    'furniture',      // furniture
+    'housing',        // housing
+    'music',          // music
+    'movies',         // movies
+    'familyFriends',  // family
+    'technology',     // technology
+  ];
 
-  // Always include work based on employment
-  if (surveyAnswers.employment !== 'student') {
-    topics.push('work');
-  }
-
-  // Add housing (always relevant)
-  topics.push('housing');
-
-  // Add technology/phones (universal)
-  topics.push('phones');
-  topics.push('technology');
-
-  // Add food (universal)
-  topics.push('food');
-
-  // Add restaurants
-  topics.push('restaurants');
-
-  // Add health if they do sports
-  if (surveyAnswers.sports.length > 0 && !surveyAnswers.sports.includes('none')) {
-    topics.push('health');
-  }
-
-  // Add hobbies based on interests
-  if (surveyAnswers.interests.length > 0) {
-    const interestToTopic: Record<string, string> = {
-      music: 'music',
-      instrument: 'music',
-      singingAlone: 'music',
-      singingGroup: 'music',
-      reading: 'newspaper',
-      movies: 'movies',
-      cooking: 'food',
-    };
-
-    const hobbyTopics = surveyAnswers.interests
-      .map(i => interestToTopic[i])
-      .filter(t => t && !topics.includes(t));
-    
-    hobbyTopics.forEach(t => topics.push(t));
-  }
-
-  // Add free time activities
-  if (surveyAnswers.freeTime.length > 0) {
-    if (surveyAnswers.freeTime.includes('clubbing')) {
-      topics.push('bars');
-    }
-    if (surveyAnswers.freeTime.includes('movies')) {
-      if (!topics.includes('movies')) topics.push('movies');
-    }
-  }
-
-  // Add travel if they have travel experience
-  if (surveyAnswers.travel.length > 0) {
-    if (surveyAnswers.travel.includes('overseasTrip') || surveyAnswers.travel.includes('overseasBusiness')) {
-      topics.push('overseasTrip');
-    }
-    topics.push('geography');
-  }
-
-  // Add internet (modern topic)
-  topics.push('internet');
-
-  // Add television
-  topics.push('television');
-
-  // Add family/friends
-  topics.push('familyFriends');
-
-  // Add shopping
-  topics.push('shopping');
-
-  // Add industry for higher forms
-  topics.push('industry');
-
-  // Add recycling/furniture for variety
-  if (Math.random() > 0.5) {
-    topics.push('recycling');
-  } else {
-    topics.push('furniture');
-  }
-
-  // Add more topics based on living situation
-  if (surveyAnswers.living === 'family') {
-    topics.push('holidays');
-    topics.push('gatherings');
-  }
-
-  return topics;
+  return coreTopics;
 }
 
 // Validation function to ensure all questions come from the bank
@@ -611,25 +527,35 @@ function validateQuestionInBank(prompt: string, type: 'experience' | 'roleplay' 
 }
 
 // Generate personalized questions based on survey answers
+// Total: 12-15 questions (1 warmup + 11-14 main questions)
 export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, formNumber: number): TestQuestion[] {
   const questions: TestQuestion[] = [];
   let questionId = 1;
 
-  // Select topics based on survey
+  // Select topics based on survey (7 core topics)
   const selectedTopics = selectTopics(surveyAnswers);
   
   console.log('📋 Selected topics for this test:', selectedTopics);
+  console.log('🎯 Target: 11-14 main questions from 7 topics');
 
-  // For each topic, add 3-5 questions from the topic thread
-  selectedTopics.forEach(topicKey => {
+  // Calculate questions per topic to reach 11-14 total
+  // 7 topics, need 11-14 questions total
+  // Distribution: 2 questions per topic = 14 questions (or some topics get 1)
+  const targetTotal = formNumber >= 3 ? 14 : formNumber >= 2 ? 13 : 11;
+  const questionsPerTopic = Math.floor(targetTotal / selectedTopics.length); // 1-2 per topic
+  const remainder = targetTotal % selectedTopics.length;
+
+  // For each topic, add 1-2 questions from the topic thread
+  selectedTopics.forEach((topicKey, index) => {
     const thread = topicThreads[topicKey];
     if (!thread) {
       console.warn(`⚠️ Topic "${topicKey}" not found in question bank!`);
       return;
     }
 
-    // Determine how many questions from this topic based on form level
-    const questionCount = formNumber >= 3 ? 5 : formNumber >= 2 ? 4 : 3;
+    // Determine how many questions from this topic
+    // Some topics get +1 if there's remainder
+    const questionCount = index < remainder ? questionsPerTopic + 1 : questionsPerTopic;
     const threadQuestions = thread.questions.slice(0, questionCount);
 
     console.log(`📚 Topic "${thread.topic}": Adding ${threadQuestions.length} questions`);
@@ -649,9 +575,12 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
     });
   });
 
-  // Add 2-4 role-play scenarios for higher forms
-  if (formNumber >= 2) {
-    const roleplayCount = formNumber >= 3 ? 4 : 2;
+  // Add 1-2 role-play scenarios if we have room (to reach 12-15 total)
+  const currentTotal = questions.length;
+  const maxTotal = 15;
+  const roleplayCount = Math.min(2, maxTotal - currentTotal);
+  
+  if (roleplayCount > 0 && formNumber >= 2) {
     const selectedRoleplays = roleplayScenarios
       .sort(() => Math.random() - 0.5)
       .slice(0, roleplayCount);
@@ -673,7 +602,8 @@ export function generatePersonalizedQuestions(surveyAnswers: SurveyAnswers, form
     });
   }
 
-  console.log(`✅ Total questions generated: ${questions.length}`);
+  console.log(`✅ Total main questions generated: ${questions.length}`);
+  console.log(`📊 Total test questions: ${questions.length + 1} (1 warmup + ${questions.length} main)`);
   
   // Final validation - ensure all questions are from the bank
   const allValid = questions.every(q => validateQuestionInBank(q.prompt, q.type));
