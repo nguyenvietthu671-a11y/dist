@@ -35,6 +35,7 @@ export interface ScoringResult {
   suggestions: string[];
   passed: boolean;
   improvedSpeech?: string;
+  detailedRecommendations?: string;
 }
 
 export interface TestQuestion {

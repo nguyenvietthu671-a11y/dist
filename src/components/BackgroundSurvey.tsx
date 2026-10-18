@@ -27,7 +27,7 @@ const livingOptions = [
   { value: 'military', label: 'Military housing', icon: '🏗️' },
 ];
 
-// Câu hỏi 1: Bạn hay làm gì? (Daily activities - chọn 6)
+// Free Time - Gộp 3 phần vào 1 trang
 const dailyActivitiesOptions = [
   { value: 'reading', label: 'Reading books/articles', icon: '📚' },
   { value: 'cooking', label: 'Cooking/Baking', icon: '👨‍🍳' },
@@ -43,7 +43,6 @@ const dailyActivitiesOptions = [
   { value: 'writing', label: 'Writing/Blogging', icon: '✍️' },
 ];
 
-// Câu hỏi 2: Nghỉ mát như nào? (Relaxation - chọn 6)
 const relaxationOptions = [
   { value: 'meditation', label: 'Meditation/Yoga', icon: '🧘' },
   { value: 'spa', label: 'Spa/Massage', icon: '💆' },
@@ -59,7 +58,6 @@ const relaxationOptions = [
   { value: 'pets', label: 'Playing with pets', icon: '🐕' },
 ];
 
-// Câu hỏi 3: Thích chơi thể thao gì? (Sports - chọn 6)
 const sportsOptions = [
   { value: 'basketball', label: 'Basketball', icon: '🏀' },
   { value: 'soccer', label: 'Soccer/Football', icon: '⚽' },
@@ -100,6 +98,20 @@ const travelOptions = [
   { value: 'overseasTrip', label: 'Overseas trip', icon: '🌍' },
 ];
 
+// MỚI: Issues you care about
+const issuesOptions = [
+  { value: 'humanRights', label: 'Human Rights', icon: '⚖️' },
+  { value: 'environment', label: 'Environment & Climate Change', icon: '🌍' },
+  { value: 'education', label: 'Education', icon: '📚' },
+  { value: 'healthcare', label: 'Healthcare', icon: '🏥' },
+  { value: 'poverty', label: 'Poverty & Inequality', icon: '💰' },
+  { value: 'technology', label: 'Technology & AI', icon: '🤖' },
+  { value: 'mentalHealth', label: 'Mental Health', icon: '🧠' },
+  { value: 'genderEquality', label: 'Gender Equality', icon: '♀️' },
+  { value: 'animalRights', label: 'Animal Rights', icon: '🐾' },
+  { value: 'politicalFreedom', label: 'Political Freedom', icon: '🗳️' },
+];
+
 export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<SurveyAnswers>({
@@ -115,22 +127,26 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
   const steps = [
     { title: 'Employment', subtitle: 'What is your job?' },
     { title: 'Living Situation', subtitle: 'Where do you live?' },
-    { title: 'Daily Activities', subtitle: 'What do you usually do in your free time? (Select 6)' },
-    { title: 'Relaxation', subtitle: 'How do you relax? (Select 6)' },
-    { title: 'Sports', subtitle: 'What sports do you like? (Select 6)' },
+    { title: 'Free Time Activities', subtitle: 'Select 6 options for each category below' },
     { title: 'Interests & Hobbies', subtitle: 'What are your interests and hobbies? (Select at least 1)' },
     { title: 'Travel Experience', subtitle: 'Which type of traveling have you done? (Select at least 1)' },
+    { title: 'Issues You Care About', subtitle: 'What social issues are you interested in? (Select at least 1)' },
   ];
 
   const canProceed = () => {
     switch (step) {
       case 0: return answers.employment !== '' && (answers.employment !== 'student' || answers.studentPurpose !== '');
       case 1: return answers.living !== '';
-      case 2: return answers.freeTime.length === 6;
-      case 3: return answers.freeTime.length === 12; // 6 daily + 6 relaxation
-      case 4: return answers.freeTime.length === 18; // 6 daily + 6 relaxation + 6 sports
-      case 5: return answers.interests.length >= 1;
-      case 6: return answers.travel.length >= 1;
+      case 2: {
+        // Check if all 3 categories have 6 selections each
+        const dailyCount = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
+        const relaxationCount = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
+        const sportsCount = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
+        return dailyCount === 6 && relaxationCount === 6 && sportsCount === 6;
+      }
+      case 3: return answers.interests.length >= 1;
+      case 4: return answers.travel.length >= 1;
+      case 5: return answers.sports.length >= 1; // Using sports field to store issues
       default: return false;
     }
   };
@@ -260,104 +276,121 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
               </div>
             )}
 
-            {/* Step 2: Daily Activities */}
+            {/* Step 2: Free Time - Gộp 3 phần vào 1 trang */}
             {step === 2 && (
-              <div>
-                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length} / 6</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {dailyActivitiesOptions.map(opt => {
-                    const isSelected = answers.freeTime.includes(opt.value);
-                    const dailyCount = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
-                    const canSelect = isSelected || dailyCount < 6;
-                    
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
-                        disabled={!canSelect}
-                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
-                          isSelected
-                            ? 'border-purple-500 bg-purple-500/10 text-white'
-                            : canSelect
-                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="text-xl">{opt.icon}</span>
-                        <span className="font-medium text-sm">{opt.label}</span>
-                      </button>
-                    );
-                  })}
+              <div className="space-y-8">
+                {/* Part 1: Daily Activities */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <span className="text-2xl">📅</span>
+                    What do you usually do? (Select 6)
+                    <span className="text-sm text-gray-400 font-normal">
+                      ({answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length}/6)
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {dailyActivitiesOptions.map(opt => {
+                      const isSelected = answers.freeTime.includes(opt.value);
+                      const count = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
+                      const canSelect = isSelected || count < 6;
+                      
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                          disabled={!canSelect}
+                          className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                            isSelected
+                              ? 'border-purple-500 bg-purple-500/10 text-white'
+                              : canSelect
+                              ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                              : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="text-xl">{opt.icon}</span>
+                          <span className="font-medium text-sm">{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Part 2: Relaxation */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <span className="text-2xl">🧘</span>
+                    How do you relax? (Select 6)
+                    <span className="text-sm text-gray-400 font-normal">
+                      ({answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length}/6)
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {relaxationOptions.map(opt => {
+                      const isSelected = answers.freeTime.includes(opt.value);
+                      const count = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
+                      const canSelect = isSelected || count < 6;
+                      
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                          disabled={!canSelect}
+                          className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                            isSelected
+                              ? 'border-cyan-500 bg-cyan-500/10 text-white'
+                              : canSelect
+                              ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                              : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="text-xl">{opt.icon}</span>
+                          <span className="font-medium text-sm">{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Part 3: Sports */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <span className="text-2xl">⚽</span>
+                    What sports do you like? (Select 6)
+                    <span className="text-sm text-gray-400 font-normal">
+                      ({answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length}/6)
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {sportsOptions.map(opt => {
+                      const isSelected = answers.freeTime.includes(opt.value);
+                      const count = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
+                      const canSelect = isSelected || count < 6;
+                      
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                          disabled={!canSelect}
+                          className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                            isSelected
+                              ? 'border-green-500 bg-green-500/10 text-white'
+                              : canSelect
+                              ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                              : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          <span className="text-xl">{opt.icon}</span>
+                          <span className="font-medium text-sm">{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step 3: Relaxation */}
+            {/* Step 3: Interests */}
             {step === 3 && (
-              <div>
-                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length} / 6</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {relaxationOptions.map(opt => {
-                    const isSelected = answers.freeTime.includes(opt.value);
-                    const relaxationCount = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
-                    const canSelect = isSelected || relaxationCount < 6;
-                    
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
-                        disabled={!canSelect}
-                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
-                          isSelected
-                            ? 'border-cyan-500 bg-cyan-500/10 text-white'
-                            : canSelect
-                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="text-xl">{opt.icon}</span>
-                        <span className="font-medium text-sm">{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Sports */}
-            {step === 4 && (
-              <div>
-                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length} / 6</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {sportsOptions.map(opt => {
-                    const isSelected = answers.freeTime.includes(opt.value);
-                    const sportsCount = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
-                    const canSelect = isSelected || sportsCount < 6;
-                    
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
-                        disabled={!canSelect}
-                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
-                          isSelected
-                            ? 'border-green-500 bg-green-500/10 text-white'
-                            : canSelect
-                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="text-xl">{opt.icon}</span>
-                        <span className="font-medium text-sm">{opt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Interests */}
-            {step === 5 && (
               <div>
                 <p className="text-sm text-gray-500 mb-4">Selected: {answers.interests.length} / 1 minimum</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -379,8 +412,8 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
               </div>
             )}
 
-            {/* Step 6: Travel */}
-            {step === 6 && (
+            {/* Step 4: Travel */}
+            {step === 4 && (
               <div>
                 <p className="text-sm text-gray-500 mb-4">Selected: {answers.travel.length} / 1 minimum</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -391,6 +424,29 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
                       className={`p-4 rounded-xl border text-left transition-all duration-200 flex items-center gap-3 ${
                         answers.travel.includes(opt.value)
                           ? 'border-cyan-500 bg-cyan-500/10 text-white'
+                          : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                      }`}
+                    >
+                      <span className="text-2xl">{opt.icon}</span>
+                      <span className="font-medium">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Issues You Care About - MỚI */}
+            {step === 5 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-4">Selected: {answers.sports.length} / 1 minimum</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {issuesOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => toggleArrayItem('sports', opt.value)}
+                      className={`p-4 rounded-xl border text-left transition-all duration-200 flex items-center gap-3 ${
+                        answers.sports.includes(opt.value)
+                          ? 'border-purple-500 bg-purple-500/10 text-white'
                           : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
                       }`}
                     >

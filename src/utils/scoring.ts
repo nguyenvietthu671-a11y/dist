@@ -386,6 +386,72 @@ function generateSuggestions(result: { overallScore: number; functionScore: numb
   return suggestions;
 }
 
+// Generate detailed sentence-by-sentence recommendations
+function generateDetailedRecommendations(responses: TestResponse[]): string {
+  if (responses.length === 0) return '';
+  
+  const recommendations: string[] = [];
+  
+  responses.forEach((response, index) => {
+    const original = response.transcript;
+    if (!original || original.trim().length === 0) return;
+    
+    const sentences = original.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentenceRecommendations: string[] = [];
+    
+    sentences.forEach((sentence, sIndex) => {
+      const trimmedSentence = sentence.trim();
+      const wordCount = trimmedSentence.split(/\s+/).length;
+      const suggestions: string[] = [];
+      
+      // Check for short sentences
+      if (wordCount < 8) {
+        suggestions.push('This sentence is too short. Try to combine it with the next sentence or add more details.');
+      }
+      
+      // Check for missing connectors
+      if (!/\b(because|however|although|therefore|for example|additionally|moreover)\b/i.test(trimmedSentence) && sIndex > 0) {
+        suggestions.push('Consider adding a connector like "because", "however", or "for example" to improve flow.');
+      }
+      
+      // Check for missing descriptive words
+      if (!/\b(beautiful|amazing|wonderful|interesting|important|significant|challenging)\b/i.test(trimmedSentence) && wordCount > 10) {
+        suggestions.push('Add descriptive words to make your response more vivid (e.g., "interesting", "challenging", "significant").');
+      }
+      
+      // Check for opinion markers
+      if (/\b(i think|i believe|in my opinion)\b/i.test(trimmedSentence)) {
+        if (!/\b(because|since|due to|the reason)\b/i.test(trimmedSentence)) {
+          suggestions.push('You expressed an opinion. Now add a reason using "because" or "since" to support it.');
+        }
+      }
+      
+      // Check for past tense usage
+      if (/\b(yesterday|last week|last year|ago)\b/i.test(trimmedSentence)) {
+        const pastTenseVerbs = trimmedSentence.match(/\b(went|saw|did|had|was|were|said|came|took|made)\b/gi) || [];
+        if (pastTenseVerbs.length === 0) {
+          suggestions.push('You mentioned a past time but didn\'t use past tense verbs. Use "went", "saw", "did", etc.');
+        }
+      }
+      
+      // Check for specific examples
+      if (wordCount > 15 && !/\b(for example|for instance|such as|like|specifically)\b/i.test(trimmedSentence)) {
+        suggestions.push('Consider adding a specific example to support your point.');
+      }
+      
+      if (suggestions.length > 0) {
+        sentenceRecommendations.push(`**Sentence ${sIndex + 1}:** "${trimmedSentence}"\n\nSuggestions:\n${suggestions.map(s => `- ${s}`).join('\n')}\n`);
+      }
+    });
+    
+    if (sentenceRecommendations.length > 0) {
+      recommendations.push(`**Question ${index + 1} - Detailed Recommendations:**\n\n${sentenceRecommendations.join('\n')}`);
+    }
+  });
+  
+  return recommendations.join('\n---\n\n');
+}
+
 // Generate improved version of user's speech
 function generateImprovedSpeech(responses: TestResponse[]): string {
   if (responses.length === 0) return '';
@@ -578,6 +644,9 @@ export function scoreResponses(responses: TestResponse[], formNumber: number): S
   // Generate improved speech
   const improvedSpeech = generateImprovedSpeech(responses);
   
+  // Generate detailed sentence-by-sentence recommendations
+  const detailedRecommendations = generateDetailedRecommendations(responses);
+  
   return {
     overallScore,
     proficiencyLevel,
@@ -589,5 +658,6 @@ export function scoreResponses(responses: TestResponse[], formNumber: number): S
     suggestions,
     passed,
     improvedSpeech,
+    detailedRecommendations,
   };
 }
