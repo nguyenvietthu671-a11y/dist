@@ -225,6 +225,64 @@ export default function Results({ result, responses, onRestart }: ResultsProps) 
           </div>
         </motion.div>
 
+        {/* Improved Speech Versions */}
+        {result.improvedSpeech && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.15 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/20 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span>✨</span> Improved Version of Your Speech
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Here's how you could improve your responses with better connectors, descriptions, and organization:
+              </p>
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 max-h-96 overflow-y-auto">
+                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {result.improvedSpeech}
+                </div>
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                <p className="text-green-400 text-xs">
+                  💡 <strong>Tip:</strong> Practice reading these improved versions aloud to internalize better sentence structures and vocabulary.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Detailed Sentence Recommendations */}
+        {result.detailedRecommendations && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/20 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span>🔍</span> Detailed Sentence-by-Sentence Recommendations
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Specific suggestions for each sentence in your responses:
+              </p>
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 max-h-[500px] overflow-y-auto">
+                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {result.detailedRecommendations}
+                </div>
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-amber-400 text-xs">
+                  💡 <strong>Tip:</strong> Focus on implementing these suggestions one at a time. Start with the most common issues across your responses.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Response Transcripts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

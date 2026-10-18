@@ -14,10 +14,68 @@ interface TestInterfaceProps {
 
 type TestPhase = 'intro' | 'warmup' | 'question' | 'recording' | 'review' | 'transition';
 
+interface TestProgress {
+  phase: TestPhase;
+  currentQuestionIndex: number;
+  responses: TestResponse[];
+  timestamp: number;
+}
+
+const STORAGE_KEY = 'opic_test_progress';
+
+// Save progress to localStorage
+const saveProgress = (phase: TestPhase, currentQuestionIndex: number, responses: TestResponse[]) => {
+  try {
+    const progress: TestProgress = {
+      phase,
+      currentQuestionIndex,
+      responses,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  } catch (e) {
+    console.error('Failed to save progress:', e);
+  }
+};
+
+// Load progress from localStorage
+const loadProgress = (): TestProgress | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return null;
+    
+    const progress: TestProgress = JSON.parse(saved);
+    
+    // Check if progress is less than 2 hours old
+    const twoHours = 2 * 60 * 60 * 1000;
+    if (Date.now() - progress.timestamp > twoHours) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    
+    return progress;
+  } catch (e) {
+    console.error('Failed to load progress:', e);
+    return null;
+  }
+};
+
+// Clear progress from localStorage
+const clearProgress = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error('Failed to clear progress:', e);
+  }
+};
+
 export default function TestInterface({ formNumber, surveyAnswers, onComplete }: TestInterfaceProps) {
-  const [phase, setPhase] = useState<TestPhase>('intro');
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
-  const [responses, setResponses] = useState<TestResponse[]>([]);
+  // Load saved progress on mount
+  const savedProgress = loadProgress();
+  
+  const [phase, setPhase] = useState<TestPhase>(savedProgress?.phase || 'intro');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(savedProgress?.currentQuestionIndex || -1);
+  const [responses, setResponses] = useState<TestResponse[]>(savedProgress?.responses || []);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isAvaSpeaking, setIsAvaSpeaking] = useState(false);
@@ -27,6 +85,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   const [useManualInput, setUseManualInput] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showEndTestModal, setShowEndTestModal] = useState(false);
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -52,6 +111,13 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   useEffect(() => { currentQuestionRef.current = currentQuestion; currentQuestionIndexRef.current = currentQuestionIndex; }, [currentQuestion, currentQuestionIndex]);
   useEffect(() => { manualTextRef.current = manualText; }, [manualText]);
   useEffect(() => { useManualInputRef.current = useManualInput; }, [useManualInput]);
+
+  // Save progress to localStorage whenever state changes
+  useEffect(() => {
+    if (phase !== 'intro' && phase !== 'transition') {
+      saveProgress(phase, currentQuestionIndex, responses);
+    }
+  }, [phase, currentQuestionIndex, responses]);
 
   // Timer for question display countdown
   useEffect(() => {
@@ -219,6 +285,8 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
         setPhase('question');
       }, 1500);
     } else {
+      // Test completed - clear progress
+      clearProgress();
       setTimeout(() => {
         onComplete(responsesRef.current);
       }, 100);
@@ -226,6 +294,9 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
   };
 
   const startTest = () => {
+    // Clear any saved progress when starting a new test
+    clearProgress();
+    
     // Log question bank stats
     const stats = getQuestionBankStats();
     console.log('📊 Question Bank Stats:', stats);
@@ -251,6 +322,19 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
     setTimeout(() => {
       setPhase('question');
     }, 4000);
+  };
+
+  const handleEndTest = () => {
+    // Clear saved progress
+    clearProgress();
+    
+    // Complete the test with current responses
+    if (responses.length > 0) {
+      onComplete(responses);
+    } else {
+      // If no responses, go back to welcome
+      window.location.reload();
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -287,6 +371,17 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
               {useManualInput ? '⌨️ Text Input' : '🎤 Voice Input'}
             </button>
           )}
+          
+          {/* End Test Button */}
+          {phase !== 'intro' && phase !== 'review' && currentQuestionIndex >= 0 && (
+            <button
+              onClick={() => setShowEndTestModal(true)}
+              className="px-3 py-1 rounded-full text-xs border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+            >
+              🏁 End Test
+            </button>
+          )}
+          
           {!isSupported && (
             <div className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs text-amber-400">
               ⚠️ Speech recognition not available
@@ -294,6 +389,37 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
           )}
         </div>
       </div>
+
+      {/* End Test Confirmation Modal */}
+      {showEndTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-md mx-4"
+          >
+            <h3 className="text-xl font-bold text-white mb-3">End Test Early?</h3>
+            <p className="text-gray-400 mb-4">
+              You've answered {responses.length} out of {questions.length} questions. 
+              Are you sure you want to end the test and see your results?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndTestModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-600 text-gray-300 hover:bg-slate-700 transition-all"
+              >
+                Continue Test
+              </button>
+              <button
+                onClick={handleEndTest}
+                className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white font-medium hover:from-red-500 hover:to-red-400 transition-all"
+              >
+                End Test
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Progress bar with dots */}
       <div className="relative z-10 w-full mb-6">
@@ -335,6 +461,43 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
                 You have {questions.length} personalized questions based on your survey answers.
               </p>
               
+              {/* Resume Test Dialog */}
+              {savedProgress && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 max-w-md mx-auto mb-6"
+                >
+                  <p className="text-cyan-300 font-medium mb-2">📝 Previous Test Found</p>
+                  <p className="text-gray-400 text-sm mb-3">
+                    You have a test in progress ({savedProgress.responses.length} answers completed).
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setPhase(savedProgress.phase);
+                        setCurrentQuestionIndex(savedProgress.currentQuestionIndex);
+                        setResponses(savedProgress.responses);
+                        clearProgress();
+                      }}
+                      className="flex-1 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 transition-all"
+                    >
+                      Resume Test
+                    </button>
+                    <button
+                      onClick={() => {
+                        clearProgress();
+                        setResponses([]);
+                        setCurrentQuestionIndex(-1);
+                      }}
+                      className="flex-1 px-4 py-2 rounded-lg border border-slate-600 text-gray-300 text-sm hover:bg-slate-700 transition-all"
+                    >
+                      Start New
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+              
               {/* Input options info */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 max-w-md mx-auto mb-6 text-left">
                 <p className="text-purple-400 text-sm font-medium mb-3">📋 How to answer:</p>
@@ -350,6 +513,7 @@ export default function TestInterface({ formNumber, surveyAnswers, onComplete }:
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-700">
                   <p className="text-gray-500 text-xs">💡 You can switch between voice and text input at any time during recording.</p>
+                  <p className="text-gray-500 text-xs mt-1">💾 Your progress is automatically saved. You can close the page and resume later.</p>
                 </div>
               </div>
 
