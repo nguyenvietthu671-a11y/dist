@@ -401,6 +401,47 @@ const topicThreads: Record<string, TopicThread> = {
       { prompt: "Unexpected things can happen when you make an appointment. Talk about memorable incident regarding an appointment. What exactly happened and how did you deal with the situation?", type: 'experience' },
     ],
   },
+
+  // New topics: Human Rights, Society, Environment, Social Issues
+  humanRights: {
+    topic: 'Human Rights',
+    questions: [
+      { prompt: "What do you know about human rights? Why are they important in today's world?", type: 'experience' },
+      { prompt: "Tell me about a human rights issue that concerns you. What is the problem and what can be done about it?", type: 'experience' },
+      { prompt: "How has the concept of human rights changed over the past century? Give examples.", type: 'experience' },
+      { prompt: "Do you think everyone in your country has equal rights? Why or why not? Explain your opinion.", type: 'experience' },
+    ],
+  },
+
+  society: {
+    topic: 'Society',
+    questions: [
+      { prompt: "What are the biggest challenges facing society today? How can we address them?", type: 'experience' },
+      { prompt: "How has society changed in your country over the past 10 years? Give specific examples.", type: 'experience' },
+      { prompt: "What role does education play in shaping society? Explain your view.", type: 'experience' },
+      { prompt: "Do you think social media has a positive or negative impact on society? Why? Support your opinion.", type: 'experience' },
+    ],
+  },
+
+  environment: {
+    topic: 'Environment',
+    questions: [
+      { prompt: "What environmental issues are most important in your country? Why are they significant?", type: 'experience' },
+      { prompt: "Tell me about something you do to help protect the environment. How does it make a difference?", type: 'experience' },
+      { prompt: "How has the environment changed in your area over the years? Describe the changes you've seen.", type: 'experience' },
+      { prompt: "What can governments and individuals do to combat climate change? Give specific suggestions.", type: 'experience' },
+    ],
+  },
+
+  socialIssues: {
+    topic: 'Social Issues',
+    questions: [
+      { prompt: "What social issue do you care about the most? Why is it important to you?", type: 'experience' },
+      { prompt: "How does poverty affect people in your community? What can be done to help?", type: 'experience' },
+      { prompt: "Tell me about a social movement that has influenced you. What did it achieve?", type: 'experience' },
+      { prompt: "What role should young people play in addressing social issues? Give examples.", type: 'experience' },
+    ],
+  },
 };
 
 // Role-play scenarios organized by category
@@ -494,6 +535,10 @@ const ALL_TOPICS = [
   'movies',         // movies
   'familyFriends',  // family
   'technology',     // technology
+  'humanRights',    // human rights
+  'society',        // society
+  'environment',    // environment
+  'socialIssues',   // social issues
 ];
 
 // Select 3-4 topics from the pool based on form level

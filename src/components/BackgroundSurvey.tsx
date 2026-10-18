@@ -27,23 +27,52 @@ const livingOptions = [
   { value: 'military', label: 'Military housing', icon: '🏗️' },
 ];
 
-const freeTimeOptions = [
-  { value: 'movies', label: 'Watching movies (at cinema)', icon: '🎬' },
-  { value: 'clubbing', label: 'Clubbing (Night Club)', icon: '🎉' },
-  { value: 'performance', label: 'Watching performance/play', icon: '🎭' },
-  { value: 'concert', label: 'Going to a concert', icon: '🎵' },
-  { value: 'park', label: 'Going to a Park', icon: '🌳' },
-  { value: 'camping', label: 'Camping', icon: '⛺' },
-  { value: 'beach', label: 'Going to the beach', icon: '🏖️' },
-  { value: 'watchSports', label: 'Watching sports', icon: '📺' },
-  { value: 'kidsSports', label: 'Watching your kids play sports', icon: '👀' },
-  { value: 'coaching', label: 'Coaching sports', icon: '🏋️' },
-  { value: 'soloGames', label: 'Playing games by yourself', icon: '🎮' },
-  { value: 'groupGames', label: 'Playing games with adults', icon: '🎲' },
-  { value: 'kidsGames', label: 'Playing with kids', icon: '🧩' },
-  { value: 'homework', label: "Helping with child's homework", icon: '📝' },
-  { value: 'housework', label: 'Helping with housework', icon: '🧹' },
-  { value: 'carMaintenance', label: 'Maintenance of car', icon: '🔧' },
+// Câu hỏi 1: Bạn hay làm gì? (Daily activities - chọn 6)
+const dailyActivitiesOptions = [
+  { value: 'reading', label: 'Reading books/articles', icon: '📚' },
+  { value: 'cooking', label: 'Cooking/Baking', icon: '👨‍🍳' },
+  { value: 'shopping', label: 'Shopping', icon: '🛍️' },
+  { value: 'gaming', label: 'Playing video games', icon: '🎮' },
+  { value: 'socialMedia', label: 'Using social media', icon: '📱' },
+  { value: 'watchingTV', label: 'Watching TV/Streaming', icon: '📺' },
+  { value: 'learning', label: 'Learning new skills', icon: '🎓' },
+  { value: 'volunteering', label: 'Volunteering', icon: '🤝' },
+  { value: 'gardening', label: 'Gardening', icon: '🌱' },
+  { value: 'crafts', label: 'DIY/Crafts', icon: '🎨' },
+  { value: 'photography', label: 'Photography', icon: '📷' },
+  { value: 'writing', label: 'Writing/Blogging', icon: '✍️' },
+];
+
+// Câu hỏi 2: Nghỉ mát như nào? (Relaxation - chọn 6)
+const relaxationOptions = [
+  { value: 'meditation', label: 'Meditation/Yoga', icon: '🧘' },
+  { value: 'spa', label: 'Spa/Massage', icon: '💆' },
+  { value: 'music', label: 'Listening to music', icon: '🎵' },
+  { value: 'nature', label: 'Walking in nature', icon: '🌳' },
+  { value: 'movies', label: 'Watching movies', icon: '🎬' },
+  { value: 'sleeping', label: 'Sleeping/Resting', icon: '😴' },
+  { value: 'bath', label: 'Taking a bath', icon: '🛁' },
+  { value: 'tea', label: 'Drinking tea/coffee', icon: '☕' },
+  { value: 'journaling', label: 'Journaling', icon: '📔' },
+  { value: 'art', label: 'Drawing/Painting', icon: '🎨' },
+  { value: 'puzzles', label: 'Puzzles/Brain games', icon: '🧩' },
+  { value: 'pets', label: 'Playing with pets', icon: '🐕' },
+];
+
+// Câu hỏi 3: Thích chơi thể thao gì? (Sports - chọn 6)
+const sportsOptions = [
+  { value: 'basketball', label: 'Basketball', icon: '🏀' },
+  { value: 'soccer', label: 'Soccer/Football', icon: '⚽' },
+  { value: 'tennis', label: 'Tennis', icon: '🎾' },
+  { value: 'swimming', label: 'Swimming', icon: '🏊' },
+  { value: 'running', label: 'Running/Jogging', icon: '🏃' },
+  { value: 'cycling', label: 'Cycling', icon: '🚴' },
+  { value: 'gym', label: 'Gym/Weight training', icon: '💪' },
+  { value: 'yoga', label: 'Yoga', icon: '🧘' },
+  { value: 'hiking', label: 'Hiking', icon: '🥾' },
+  { value: 'badminton', label: 'Badminton', icon: '🏸' },
+  { value: 'volleyball', label: 'Volleyball', icon: '🏐' },
+  { value: 'martialArts', label: 'Martial arts', icon: '🥋' },
 ];
 
 const interestOptions = [
@@ -61,36 +90,6 @@ const interestOptions = [
   { value: 'cooking', label: 'Cooking', icon: '👨‍🍳' },
   { value: 'gardening', label: 'Gardening', icon: '🌱' },
   { value: 'pets', label: 'Raising pets', icon: '🐕' },
-];
-
-const sportsOptions = [
-  { value: 'basketball', label: 'Basketball', icon: '🏀' },
-  { value: 'baseball', label: 'Baseball / Softball', icon: '⚾' },
-  { value: 'soccer', label: 'Soccer', icon: '⚽' },
-  { value: 'football', label: 'Football', icon: '🏈' },
-  { value: 'rugby', label: 'Rugby', icon: '🏉' },
-  { value: 'golf', label: 'Golf', icon: '⛳' },
-  { value: 'volleyball', label: 'Volleyball', icon: '🏐' },
-  { value: 'tennis', label: 'Tennis', icon: '🎾' },
-  { value: 'badminton', label: 'Badminton', icon: '🏸' },
-  { value: 'pingpong', label: 'Table Tennis / Ping Pong', icon: '🏓' },
-  { value: 'swimming', label: 'Swimming', icon: '🏊' },
-  { value: 'biking', label: 'Biking', icon: '🚴' },
-  { value: 'motorbiking', label: 'Motor Biking', icon: '🏍️' },
-  { value: 'skiing', label: 'Skiing / Snowboarding', icon: '⛷️' },
-  { value: 'waterskiing', label: 'Water Skiing', icon: '🚤' },
-  { value: 'iceskating', label: 'Ice Skating', icon: '⛸️' },
-  { value: 'rollerblading', label: 'Roller Blading', icon: '🛼' },
-  { value: 'horseriding', label: 'Horse riding', icon: '🏇' },
-  { value: 'jogging', label: 'Jogging', icon: '🏃' },
-  { value: 'walking', label: 'Walking', icon: '🚶' },
-  { value: 'yoga', label: 'Doing Yoga', icon: '🧘' },
-  { value: 'hiking', label: 'Hiking / Trekking', icon: '🥾' },
-  { value: 'fishing', label: 'Fishing', icon: '🎣' },
-  { value: 'boating', label: 'Riding a boat', icon: '⛵' },
-  { value: 'workout', label: 'Working out (gym)', icon: '💪' },
-  { value: 'gymnastics', label: 'Gymnastics', icon: '🤸' },
-  { value: 'none', label: "I don't do any physical activity", icon: '🛋️' },
 ];
 
 const travelOptions = [
@@ -116,9 +115,10 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
   const steps = [
     { title: 'Employment', subtitle: 'What is your job?' },
     { title: 'Living Situation', subtitle: 'Where do you live?' },
-    { title: 'Free Time', subtitle: 'What do you do in your free time? (Select at least 12)' },
+    { title: 'Daily Activities', subtitle: 'What do you usually do in your free time? (Select 6)' },
+    { title: 'Relaxation', subtitle: 'How do you relax? (Select 6)' },
+    { title: 'Sports', subtitle: 'What sports do you like? (Select 6)' },
     { title: 'Interests & Hobbies', subtitle: 'What are your interests and hobbies? (Select at least 1)' },
-    { title: 'Sports & Exercise', subtitle: 'What sports or exercise do you enjoy? (Select at least 1)' },
     { title: 'Travel Experience', subtitle: 'Which type of traveling have you done? (Select at least 1)' },
   ];
 
@@ -126,10 +126,11 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
     switch (step) {
       case 0: return answers.employment !== '' && (answers.employment !== 'student' || answers.studentPurpose !== '');
       case 1: return answers.living !== '';
-      case 2: return answers.freeTime.length >= 12;
-      case 3: return answers.interests.length >= 1;
-      case 4: return answers.sports.length >= 1;
-      case 5: return answers.travel.length >= 1;
+      case 2: return answers.freeTime.length === 6;
+      case 3: return answers.freeTime.length === 12; // 6 daily + 6 relaxation
+      case 4: return answers.freeTime.length === 18; // 6 daily + 6 relaxation + 6 sports
+      case 5: return answers.interests.length >= 1;
+      case 6: return answers.travel.length >= 1;
       default: return false;
     }
   };
@@ -259,31 +260,104 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
               </div>
             )}
 
-            {/* Step 2: Free Time */}
+            {/* Step 2: Daily Activities */}
             {step === 2 && (
               <div>
-                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.length} / 12 minimum</p>
+                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length} / 6</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {freeTimeOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => toggleArrayItem('freeTime', opt.value)}
-                      className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
-                        answers.freeTime.includes(opt.value)
-                          ? 'border-purple-500 bg-purple-500/10 text-white'
-                          : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                      }`}
-                    >
-                      <span className="text-xl">{opt.icon}</span>
-                      <span className="font-medium text-sm">{opt.label}</span>
-                    </button>
-                  ))}
+                  {dailyActivitiesOptions.map(opt => {
+                    const isSelected = answers.freeTime.includes(opt.value);
+                    const dailyCount = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
+                    const canSelect = isSelected || dailyCount < 6;
+                    
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                        disabled={!canSelect}
+                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                          isSelected
+                            ? 'border-purple-500 bg-purple-500/10 text-white'
+                            : canSelect
+                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-xl">{opt.icon}</span>
+                        <span className="font-medium text-sm">{opt.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Step 3: Interests */}
+            {/* Step 3: Relaxation */}
             {step === 3 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length} / 6</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {relaxationOptions.map(opt => {
+                    const isSelected = answers.freeTime.includes(opt.value);
+                    const relaxationCount = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
+                    const canSelect = isSelected || relaxationCount < 6;
+                    
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                        disabled={!canSelect}
+                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                          isSelected
+                            ? 'border-cyan-500 bg-cyan-500/10 text-white'
+                            : canSelect
+                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-xl">{opt.icon}</span>
+                        <span className="font-medium text-sm">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Sports */}
+            {step === 4 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-4">Selected: {answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length} / 6</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {sportsOptions.map(opt => {
+                    const isSelected = answers.freeTime.includes(opt.value);
+                    const sportsCount = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
+                    const canSelect = isSelected || sportsCount < 6;
+                    
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => canSelect && toggleArrayItem('freeTime', opt.value)}
+                        disabled={!canSelect}
+                        className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
+                          isSelected
+                            ? 'border-green-500 bg-green-500/10 text-white'
+                            : canSelect
+                            ? 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
+                            : 'border-slate-800 bg-slate-900/30 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-xl">{opt.icon}</span>
+                        <span className="font-medium text-sm">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Interests */}
+            {step === 5 && (
               <div>
                 <p className="text-sm text-gray-500 mb-4">Selected: {answers.interests.length} / 1 minimum</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -305,31 +379,8 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
               </div>
             )}
 
-            {/* Step 4: Sports */}
-            {step === 4 && (
-              <div>
-                <p className="text-sm text-gray-500 mb-4">Selected: {answers.sports.length} / 1 minimum</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto pr-2">
-                  {sportsOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => toggleArrayItem('sports', opt.value)}
-                      className={`p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2 ${
-                        answers.sports.includes(opt.value)
-                          ? 'border-purple-500 bg-purple-500/10 text-white'
-                          : 'border-slate-700 bg-slate-800/50 text-gray-300 hover:border-slate-600'
-                      }`}
-                    >
-                      <span className="text-xl">{opt.icon}</span>
-                      <span className="font-medium text-sm">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Travel */}
-            {step === 5 && (
+            {/* Step 6: Travel */}
+            {step === 6 && (
               <div>
                 <p className="text-sm text-gray-500 mb-4">Selected: {answers.travel.length} / 1 minimum</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

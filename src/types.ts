@@ -4,7 +4,7 @@ export interface SurveyAnswers {
   employment: string;
   studentPurpose: string;
   living: string;
-  freeTime: string[];
+  freeTime: string[]; // 18 items: 6 daily + 6 relaxation + 6 sports
   interests: string[];
   sports: string[];
   travel: string[];
