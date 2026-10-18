@@ -37,6 +37,19 @@ body {
   color: white;
 }
 
+/* Hide Netlify badge */
+#nl-badge-frame,
+#nl-badge,
+.nl-badge {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Safe area padding for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

@@ -152,7 +152,7 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 pb-28 relative">
+    <div className="min-h-screen flex flex-col p-6 pb-32 relative">
       {/* Background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
       
@@ -355,7 +355,7 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
       </div>
 
       {/* Navigation - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800">
+      <div className="fixed bottom-0 left-0 right-0 z-[99999999] bg-slate-950/95 backdrop-blur-md border-t border-slate-800 pb-safe">
         <div className="max-w-4xl mx-auto w-full px-6 py-4 flex justify-between items-center">
           <button
             onClick={() => step > 0 && setStep(step - 1)}
