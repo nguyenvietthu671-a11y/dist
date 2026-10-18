@@ -138,11 +138,13 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
       case 0: return answers.employment !== '' && (answers.employment !== 'student' || answers.studentPurpose !== '');
       case 1: return answers.living !== '';
       case 2: {
-        // Check if all 3 categories have 6 selections each
+        // Check if total = 6 AND each category has at least 1
+        const totalSelected = answers.freeTime.length;
         const dailyCount = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
         const relaxationCount = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
         const sportsCount = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
-        return dailyCount === 6 && relaxationCount === 6 && sportsCount === 6;
+        
+        return totalSelected === 6 && dailyCount >= 1 && relaxationCount >= 1 && sportsCount >= 1;
       }
       case 3: return answers.interests.length >= 1;
       case 4: return answers.travel.length >= 1;
@@ -161,10 +163,37 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
 
   const toggleArrayItem = (field: keyof SurveyAnswers, value: string) => {
     const current = answers[field] as string[];
-    if (current.includes(value)) {
-      setAnswers({ ...answers, [field]: current.filter(v => v !== value) });
+    
+    if (field === 'freeTime') {
+      // Special logic for freeTime to ensure each category has at least 1
+      if (current.includes(value)) {
+        // Trying to deselect - check if this would make a category empty
+        const category = dailyActivitiesOptions.some(o => o.value === value) ? 'daily' :
+                        relaxationOptions.some(o => o.value === value) ? 'relaxation' : 'sports';
+        
+        const dailyCount = current.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
+        const relaxationCount = current.filter(v => relaxationOptions.some(o => o.value === v)).length;
+        const sportsCount = current.filter(v => sportsOptions.some(o => o.value === v)).length;
+        
+        // Prevent deselecting if it would make the category empty
+        if (category === 'daily' && dailyCount === 1) return;
+        if (category === 'relaxation' && relaxationCount === 1) return;
+        if (category === 'sports' && sportsCount === 1) return;
+        
+        setAnswers({ ...answers, [field]: current.filter(v => v !== value) });
+      } else {
+        // Trying to select - check if we haven't reached 6 total
+        if (current.length < 6) {
+          setAnswers({ ...answers, [field]: [...current, value] });
+        }
+      }
     } else {
-      setAnswers({ ...answers, [field]: [...current, value] });
+      // Normal toggle for other fields
+      if (current.includes(value)) {
+        setAnswers({ ...answers, [field]: current.filter(v => v !== value) });
+      } else {
+        setAnswers({ ...answers, [field]: [...current, value] });
+      }
     }
   };
 
@@ -279,20 +308,34 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
             {/* Step 2: Free Time - Gộp 3 phần vào 1 trang */}
             {step === 2 && (
               <div className="space-y-8">
+                {/* Summary */}
+                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                  <p className="text-purple-300 font-medium mb-2">
+                    📋 Select a total of 6 options across all 3 categories below. Each category must have at least 1 selection.
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Total selected: <span className="text-white font-bold">{answers.freeTime.length}/6</span>
+                  </p>
+                </div>
+
                 {/* Part 1: Daily Activities */}
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <span className="text-2xl">📅</span>
-                    What do you usually do? (Select 6)
-                    <span className="text-sm text-gray-400 font-normal">
-                      ({answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length}/6)
+                    What do you usually do?
+                    <span className={`text-sm font-normal ${
+                      answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length >= 1 
+                        ? 'text-green-400' 
+                        : 'text-gray-400'
+                    }`}>
+                      ({answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length} selected, min 1)
                     </span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {dailyActivitiesOptions.map(opt => {
                       const isSelected = answers.freeTime.includes(opt.value);
-                      const count = answers.freeTime.filter(v => dailyActivitiesOptions.some(o => o.value === v)).length;
-                      const canSelect = isSelected || count < 6;
+                      const totalCount = answers.freeTime.length;
+                      const canSelect = isSelected || totalCount < 6;
                       
                       return (
                         <button
@@ -319,16 +362,20 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <span className="text-2xl">🧘</span>
-                    How do you relax? (Select 6)
-                    <span className="text-sm text-gray-400 font-normal">
-                      ({answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length}/6)
+                    How do you relax?
+                    <span className={`text-sm font-normal ${
+                      answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length >= 1 
+                        ? 'text-green-400' 
+                        : 'text-gray-400'
+                    }`}>
+                      ({answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length} selected, min 1)
                     </span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {relaxationOptions.map(opt => {
                       const isSelected = answers.freeTime.includes(opt.value);
-                      const count = answers.freeTime.filter(v => relaxationOptions.some(o => o.value === v)).length;
-                      const canSelect = isSelected || count < 6;
+                      const totalCount = answers.freeTime.length;
+                      const canSelect = isSelected || totalCount < 6;
                       
                       return (
                         <button
@@ -355,16 +402,20 @@ export default function BackgroundSurvey({ onComplete }: BackgroundSurveyProps) 
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <span className="text-2xl">⚽</span>
-                    What sports do you like? (Select 6)
-                    <span className="text-sm text-gray-400 font-normal">
-                      ({answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length}/6)
+                    What sports do you like?
+                    <span className={`text-sm font-normal ${
+                      answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length >= 1 
+                        ? 'text-green-400' 
+                        : 'text-gray-400'
+                    }`}>
+                      ({answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length} selected, min 1)
                     </span>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {sportsOptions.map(opt => {
                       const isSelected = answers.freeTime.includes(opt.value);
-                      const count = answers.freeTime.filter(v => sportsOptions.some(o => o.value === v)).length;
-                      const canSelect = isSelected || count < 6;
+                      const totalCount = answers.freeTime.length;
+                      const canSelect = isSelected || totalCount < 6;
                       
                       return (
                         <button
