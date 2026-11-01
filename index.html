@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPIc AI Mock Test - ACTFL Standard Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <span class="logo-badge">OPIc</span>
+        <span class="logo-text">AI Simulator</span>
+      </div>
+      <span class="track-badge" id="currentTrackBadge">TRACK: AL (Advanced)</span>
+    </div>
+
+    <div class="header-center" id="examHeaderInfo" style="display: none;">
+      <div class="question-tracker">
+        <span class="tracker-label">Question</span>
+        <span class="tracker-num" id="currentQuestionNum">1</span>
+        <span class="tracker-total">/ 15</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="total-timer" id="totalTimerContainer" style="display: none;">
+        <svg class="timer-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span id="totalTimeDisplay">30:00</span>
+      </div>
+      <button class="btn-ghost" id="btnRestart">Bắt đầu lại</button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- VIEW 1: Background Survey (Chọn chủ đề) -->
+    <section class="view-section active" id="viewSurvey">
+      <div class="survey-card">
+        <div class="card-header">
+          <span class="step-tag">BƯỚC 1/2</span>
+          <h2>Background Survey (Khảo sát chủ đề)</h2>
+          <p class="subtitle">Đề thi OPIc sẽ sinh ngẫu nhiên các câu hỏi dựa trên các chủ đề bạn chọn dưới đây (Yêu cầu chọn tối thiểu <strong>3 chủ đề</strong>).</p>
+        </div>
+
+        <div class="track-selection">
+          <label class="track-option">
+            <input type="radio" name="trackSelect" value="al" checked>
+            <div class="track-card">
+              <span class="track-title">Target: AL / IH (Advanced Track)</span>
+              <span class="track-desc">Dành cho mục tiêu điểm cao. Bao gồm các câu hỏi so sánh xu hướng xã hội, tình huống xử lý sự cố phức tạp.</span>
+            </div>
+          </label>
+          <label class="track-option">
+            <input type="radio" name="trackSelect" value="im">
+            <div class="track-card">
+              <span class="track-title">Target: IM (Intermediate Track)</span>
+              <span class="track-desc">Dành cho mục tiêu IM1 - IM3. Tập trung vào thói quen thường nhật, miêu tả nơi chốn và kỷ niệm quá khứ.</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="topics-grid" id="topicsGrid">
+          <!-- Dynamic Topic Cards injected by JS -->
+        </div>
+
+        <div class="survey-footer">
+          <div class="selected-count-bar">
+            Đã chọn: <span id="selectedCount">0</span> chủ đề (Tối thiểu 3)
+          </div>
+          <button class="btn-primary" id="btnConfirmSurvey" disabled>Tiếp tục sang kiểm tra thiết bị →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: Audio & Mic Check -->
+    <section class="view-section" id="viewDeviceCheck">
+      <div class="device-card">
+        <span class="step-tag">BƯỚC 2/2</span>
+        <h2>Kiểm tra Tai nghe & Micro</h2>
+        <p class="subtitle">Đảm bảo bạn có thể nghe rõ người phỏng vấn ảo Ava và micro hoạt động tốt.</p>
+
+        <div class="check-grid">
+          <div class="check-box">
+            <div class="check-icon">🔊</div>
+            <h3>1. Kiểm tra Loa / Tai nghe</h3>
+            <p>Bấm nút bên dưới để nghe thử giọng đọc câu hỏi mẫu từ giám khảo ảo Ava.</p>
+            <button class="btn-secondary" id="btnTestAudio">Phát âm thanh thử nghiệm</button>
+            <audio id="testAudioElement" src="assets/audio/01_Q1.mp3"></audio>
+          </div>
+
+          <div class="check-box">
+            <div class="check-icon">🎙️</div>
+            <h3>2. Kiểm tra Microphone</h3>
+            <p>Bấm "Cho phép" khi trình duyệt yêu cầu quyền truy cập micro và thử nói một câu.</p>
+            <button class="btn-secondary" id="btnTestMic">Kiểm tra Micro</button>
+            <div class="mic-meter" id="micMeter">
+              <div class="meter-bar" id="meterBar"></div>
+            </div>
+            <span class="mic-status" id="micStatusText">Chưa kết nối micro</span>
+          </div>
+        </div>
+
+        <div class="device-footer">
+          <button class="btn-outline" id="btnBackToSurvey">← Quay lại chọn chủ đề</button>
+          <button class="btn-primary btn-lg" id="btnStartExam" disabled>Bắt đầu làm bài thi thật 🚀</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: Examination Room (Mô phỏng phòng thi chuẩn OPIc) -->
+    <section class="view-section" id="viewExam">
+      <div class="exam-room">
+
+        <!-- Stage Area: Avatar Ava & Voice animation -->
+        <div class="ava-stage">
+          <div class="avatar-wrapper" id="avatarWrapper">
+            <img src="assets/avatar1.png" alt="Ava Interviewer" class="ava-avatar" id="avaImg">
+            <div class="sound-wave-ring ring-1"></div>
+            <div class="sound-wave-ring ring-2"></div>
+            <div class="sound-wave-ring ring-3"></div>
+          </div>
+
+          <div class="interviewer-info">
+            <h3 class="ava-name">Ava</h3>
+            <span class="interviewer-role">ACTFL Certified OPIc AI Interviewer</span>
+          </div>
+
+          <!-- Question Prompt State Badge -->
+          <div class="state-pill" id="examStatePill">
+            <span class="pulsing-dot"></span>
+            <span class="state-text" id="examStateText">Preparing question...</span>
+          </div>
+        </div>
+
+        <!-- Question Player & Control Box -->
+        <div class="question-control-box">
+
+          <!-- Audio Waveform / Prompt Player -->
+          <div class="prompt-player-bar">
+            <button class="btn-replay" id="btnReplay" title="Nghe lại câu hỏi (Tối đa 1 lần)">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M1 4v6h6"></path>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Replay (<span id="replayCountText">1</span> left)</span>
+            </button>
+
+            <div class="prompt-audio-waves" id="promptAudioWaves">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+
+            <div class="hidden-audio-container">
+              <audio id="examAudioPlayer"></audio>
+            </div>
+          </div>
+
+          <!-- Hidden Transcript Toggle (Cho phép học viên xem transcript câu hỏi nếu muốn ôn luyện) -->
+          <div class="transcript-collapsible">
+            <button class="btn-link" id="btnToggleTranscript">👁️ Hiển thị gợi ý đề bài (Practice Mode)</button>
+            <div class="transcript-box" id="transcriptBox" style="display: none;">
+              <p class="transcript-topic">Topic: <strong id="currentTopicName">Introduction</strong></p>
+              <p class="transcript-content" id="currentQuestionText">Loading...</p>
+            </div>
+          </div>
+
+          <!-- Live Recording Visualizer -->
+          <div class="recording-panel" id="recordingPanel" style="display: none;">
+            <div class="rec-indicator">
+              <span class="rec-dot"></span>
+              <span>RECORDING YOUR ANSWER</span>
+            </div>
+            <canvas id="liveVisualizer" width="480" height="60"></canvas>
+          </div>
+
+          <!-- Question Speaking Countdown Timer -->
+          <div class="speaking-timer-container">
+            <div class="timer-top-row">
+              <span class="timer-title" id="speakingTimerLabel">Speaking Time Remaining</span>
+              <span class="timer-digits" id="speakingTimerDigits">02:00</span>
+            </div>
+            <div class="timer-progress-track">
+              <div class="timer-progress-fill" id="timerProgressFill"></div>
+            </div>
+          </div>
+
+          <!-- Next Button -->
+          <div class="exam-actions">
+            <span class="auto-submit-hint" id="autoSubmitHint">Khi hết giờ hệ thống sẽ tự động nộp và chuyển câu.</span>
+            <button class="btn-primary btn-next" id="btnNextQuestion">
+              <span>Next Question</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 4: Evaluation & Score Report -->
+    <section class="view-section" id="viewReport">
+      <div class="report-container">
+        
+        <div class="report-header">
+          <div class="score-badge-card">
+            <span class="badge-sub">ACTFL OFFICIAL RATING</span>
+            <h1 class="grade-al" id="finalOPIcLevel">AL</h1>
+            <p class="grade-title" id="finalLevelTitle">Advanced Low</p>
+          </div>
+
+          <div class="overall-summary">
+            <h2>Kết quả đánh giá thi thử OPIc AI</h2>
+            <p class="summary-desc" id="summaryDescription">Bạn đã hoàn thành xuất sắc bài thi thử OPIc. Khả năng miêu tả chi tiết, xử lý tình huống linh hoạt và phát âm tự nhiên đạt mức đánh giá tiêu chuẩn.</p>
+            <div class="overall-meta">
+              <span>Tổng số câu trả lời: <strong id="reportTotalAnswers">15/15</strong></span>
+              <span>Thời gian làm bài: <strong id="reportTimeSpent">24m 15s</strong></span>
+              <span>Điểm tổng trung bình: <strong id="reportAvgScore">4.8 / 5.0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Core Criteria Scores -->
+        <div class="criteria-grid">
+          <div class="criteria-card">
+            <div class="criteria-head">
+              <span class="criteria-name">Fluency (Độ trôi chảy)</span>
+              <span class="criteria-score" id="scoreFluency">4.8/5.0</span>
+            </div>
+            <div class="criteria-bar"><div class="bar-fill" id="barFluency" style="width: 96%;"></div></div>
+            <p class="criteria-note">Nhịp độ nói tự nhiên, thời gian ngập ngừng ngắn và ít sử dụng từ đệm thừa.</p>
+          </div>
+
+          <div class="criteria-card">
+            <div class="criteria-head">
+              <span class="criteria-name">Vocabulary (Từ vựng)</span>
+              <span class="criteria-score" id="scoreVocabulary">4.6/5.0</span>
+            </div>
+            <div class="criteria-bar"><div class="bar-fill" id="barVocabulary" style="width: 92%;"></div></div>
+            <p class="criteria-note">Sử dụng nhiều collocations và tính từ mô tả phong phú theo từng chủ đề.</p>
+          </div>
+
+          <div class="criteria-card">
+            <div class="criteria-head">
+              <span class="criteria-name">Grammar (Ngữ pháp)</span>
+              <span class="criteria-score" id="scoreGrammar">4.7/5.0</span>
+            </div>
+            <div class="criteria-bar"><div class="bar-fill" id="barGrammar" style="width: 94%;"></div></div>
+            <p class="criteria-note">Chia thì quá khứ/hiện tại hoàn hảo chính xác trong các câu hỏi kể lại trải nghiệm.</p>
+          </div>
+
+          <div class="criteria-card">
+            <div class="criteria-head">
+              <span class="criteria-name">Task Completion (Độ hoàn thành)</span>
+              <span class="criteria-score" id="scoreRelevance">5.0/5.0</span>
+            </div>
+            <div class="criteria-bar"><div class="bar-fill" id="barRelevance" style="width: 100%;"></div></div>
+            <p class="criteria-note">Trả lời đầy đủ tất cả các ý được hỏi trong đề bài, đặc biệt là phần Roleplay.</p>
+          </div>
+        </div>
+
+        <!-- Detailed Breakdown Per Question -->
+        <div class="questions-breakdown-section">
+          <h3>Chi tiết từng câu hỏi & AI Feedback</h3>
+          <div class="breakdown-list" id="breakdownList">
+            <!-- Dynamic Injection of each question feedback -->
+          </div>
+        </div>
+
+        <div class="report-footer">
+          <button class="btn-primary btn-lg" id="btnRetakeExam">Thi thử bài mới 🔄</button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
