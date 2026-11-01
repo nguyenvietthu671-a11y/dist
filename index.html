@@ -40,7 +40,7 @@
         </svg>
         <span id="totalTimeDisplay">30:00</span>
       </div>
-      <button class="btn-ghost" id="btnRestart" aria-label="Bắt đầu lại bài thi">
+      <button class="btn-ghost" id="btnRestart" aria-label="Bắt đầu lại từ đầu">
         <svg class="icon-refresh" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M23 4v6h-6"></path>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
@@ -50,201 +50,444 @@
     </div>
   </header>
 
-  <!-- Main Container with Accessible Landmark -->
+  <!-- Step Progress Indicator -->
+  <nav class="flow-stepper-container" id="flowStepper" aria-label="Quy trình thi OPIc chuẩn">
+    <ol class="flow-stepper-list">
+      <li class="flow-step active" id="stepIndicatorSurvey">
+        <span class="step-num">1</span>
+        <span class="step-text">Background Survey</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorAssessment">
+        <span class="step-num">2</span>
+        <span class="step-text">Self Assessment</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorSetup">
+        <span class="step-num">3</span>
+        <span class="step-text">Pre-Test Setup</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorSample">
+        <span class="step-num">4</span>
+        <span class="step-text">Sample Question</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorBegin">
+        <span class="step-num">5</span>
+        <span class="step-text">Begin Test</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorExam">
+        <span class="step-num">6</span>
+        <span class="step-text">Speaking Exam</span>
+      </li>
+      <li class="flow-step" id="stepIndicatorReport">
+        <span class="step-num">7</span>
+        <span class="step-text">Report</span>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Main Container -->
   <main class="main-container" id="mainContent" role="main">
 
-    <!-- VIEW 1: Background Survey (Chọn chủ đề) -->
+    <!-- ========================================== -->
+    <!-- VIEW 1: AUTHENTIC BACKGROUND SURVEY (5 PARTS) -->
+    <!-- ========================================== -->
     <section class="view-section active" id="viewSurvey" aria-labelledby="surveyHeading">
       <div class="survey-card">
+        
+        <!-- Header with Sub-Part Tracker -->
         <div class="card-header">
-          <span class="step-tag" aria-hidden="true">BƯỚC 1/2</span>
-          <h1 id="surveyHeading" class="view-title">Background Survey (Khảo sát chủ đề)</h1>
-          <p class="subtitle">Đề thi OPIc sẽ sinh ngẫu nhiên các câu hỏi dựa trên các chủ đề bạn chọn dưới đây (Yêu cầu chọn tối thiểu <strong>3 chủ đề</strong>).</p>
+          <div class="part-pill-row">
+            <span class="step-tag" id="surveyPartTag">PART 1 OF 5</span>
+            <span class="sub-progress-dots" aria-hidden="true">
+              <span class="dot active" id="dotPart1"></span>
+              <span class="dot" id="dotPart2"></span>
+              <span class="dot" id="dotPart3"></span>
+              <span class="dot" id="dotPart4"></span>
+              <span class="dot" id="dotPart5"></span>
+            </span>
+          </div>
+          <h1 id="surveyHeading" class="view-title">Background Survey</h1>
+          <p class="subtitle" id="surveySubtitle">Answer as accurately as possible. This test will be based on your responses.</p>
         </div>
 
-        <fieldset class="track-selection" aria-label="Chọn mục tiêu cấp độ thi OPIc">
-          <legend class="sr-only">Mục tiêu cấp độ thi</legend>
-          <label class="track-option">
-            <input type="radio" name="trackSelect" value="al" checked aria-describedby="descTrackAL">
-            <div class="track-card">
-              <span class="track-title">Target: AL / IH (Advanced Track)</span>
-              <span class="track-desc" id="descTrackAL">Dành cho mục tiêu điểm cao. Bao gồm các câu hỏi so sánh xu hướng xã hội, tình huống xử lý sự cố phức tạp.</span>
-            </div>
-          </label>
-          <label class="track-option">
-            <input type="radio" name="trackSelect" value="im" aria-describedby="descTrackIM">
-            <div class="track-card">
-              <span class="track-title">Target: IM (Intermediate Track)</span>
-              <span class="track-desc" id="descTrackIM">Dành cho mục tiêu IM1 - IM3. Tập trung vào thói quen thường nhật, miêu tả nơi chốn và kỷ niệm quá khứ.</span>
-            </div>
-          </label>
-        </fieldset>
-
-        <div class="topics-section">
-          <h2 class="section-subheading">Danh sách chủ đề khảo sát</h2>
-          <div class="topics-grid" id="topicsGrid" role="group" aria-label="Chọn các chủ đề thi">
-            <!-- Dynamic Accessible Topic Buttons injected by JS -->
+        <!-- SUB-PAGE 1: Work Experience -->
+        <div class="survey-subpage active" id="surveySubpage1">
+          <h2 class="subpage-title">What best describes your field of work?</h2>
+          <div class="options-vertical-grid" id="q1WorkFieldGroup" role="radiogroup" aria-label="Field of work">
+            <!-- Injected by JS -->
           </div>
+
+          <div id="q1SubQuestionsContainer" class="dynamic-subquestions">
+            <!-- Branching questions appear here dynamically -->
+          </div>
+        </div>
+
+        <!-- SUB-PAGE 2: Education -->
+        <div class="survey-subpage" id="surveySubpage2" style="display: none;">
+          <h2 class="subpage-title">Are you currently going to school?</h2>
+          <div class="options-vertical-grid" id="q2SchoolGroup" role="radiogroup" aria-label="Currently going to school">
+            <!-- Injected by JS -->
+          </div>
+
+          <div id="q2SubQuestionsContainer" class="dynamic-subquestions">
+            <!-- Branching questions appear here dynamically -->
+          </div>
+        </div>
+
+        <!-- SUB-PAGE 3: Housing -->
+        <div class="survey-subpage" id="surveySubpage3" style="display: none;">
+          <h2 class="subpage-title">Where do you live?</h2>
+          <div class="options-vertical-grid" id="q3HousingGroup" role="radiogroup" aria-label="Where do you live">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- SUB-PAGE 4: Leisure, Hobbies, Sports, Travel (At least 6 items) -->
+        <div class="survey-subpage" id="surveySubpage4" style="display: none;">
+          <div class="part4-header-banner">
+            <h2 class="subpage-title">Select a total of at least six (6) options across the sections below:</h2>
+            <div class="selection-status-badge" id="part4CounterBadge" aria-live="polite">
+              <span id="part4Count">0</span> Items Selected (Tối thiểu 6)
+            </div>
+          </div>
+
+          <div class="part4-categories-wrapper">
+            <!-- Category 1: Activities -->
+            <div class="category-block">
+              <h3 class="category-head">1. What activities do you do?</h3>
+              <div class="chips-compact-grid" id="part4ActivitiesGrid" role="group" aria-label="Activities"></div>
+            </div>
+
+            <!-- Category 2: Hobbies -->
+            <div class="category-block">
+              <h3 class="category-head">2. What interests or hobbies do you enjoy?</h3>
+              <div class="chips-compact-grid" id="part4HobbiesGrid" role="group" aria-label="Hobbies"></div>
+            </div>
+
+            <!-- Category 3: Sports -->
+            <div class="category-block">
+              <h3 class="category-head">3. What sports or physical activities do you participate in?</h3>
+              <div class="chips-compact-grid" id="part4SportsGrid" role="group" aria-label="Sports"></div>
+            </div>
+
+            <!-- Category 4: Travel -->
+            <div class="category-block">
+              <h3 class="category-head">4. What types of vacation or travel do you do?</h3>
+              <div class="chips-compact-grid" id="part4TravelGrid" role="group" aria-label="Travel"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-PAGE 5: 3 Topics Interested (Choose exactly 3) -->
+        <div class="survey-subpage" id="surveySubpage5" style="display: none;">
+          <div class="part5-header-banner">
+            <h2 class="subpage-title">Please select 3 topics from the following that you are interested in:</h2>
+            <div class="selection-status-badge" id="part5CounterBadge" aria-live="polite">
+              <span id="part5Count">0</span> / 3 Topics Selected
+            </div>
+          </div>
+          <div class="topics-large-grid" id="part5TopicsGrid" role="group" aria-label="Select 3 topics">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Footer Navigation for Survey -->
+        <div class="survey-footer">
+          <button class="btn-secondary" id="btnSurveyBack" style="display: none;" aria-label="Quay lại câu hỏi trước">← Back</button>
+          <div class="footer-spacer"></div>
+          <button class="btn-primary btn-lg" id="btnSurveyNext" disabled aria-disabled="true">Next Part →</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: SELF ASSESSMENT (6 PROFICIENCY LEVELS) -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewSelfAssessment" style="display: none;" aria-labelledby="assessmentHeading">
+      <div class="survey-card">
+        <div class="card-header">
+          <span class="step-tag" aria-hidden="true">STEP 2 OF 5</span>
+          <h1 id="assessmentHeading" class="view-title">Self Assessment</h1>
+          <p class="subtitle">Choose the best description of your English-speaking ability. This test will be based on your response.</p>
+        </div>
+
+        <div class="self-assessment-grid" id="selfAssessmentGrid" role="radiogroup" aria-label="Chọn cấp độ năng lực tiếng Anh">
+          <!-- 6 Levels Injected by JS -->
         </div>
 
         <div class="survey-footer">
-          <div class="selected-count-bar" aria-live="polite" id="selectedCountBar">
-            Đã chọn: <span id="selectedCount">0</span> chủ đề (Tối thiểu 3)
-          </div>
-          <button class="btn-primary btn-lg" id="btnConfirmSurvey" disabled aria-disabled="true">Tiếp tục sang kiểm tra thiết bị →</button>
+          <button class="btn-secondary" id="btnAssessmentBack">← Quay lại Survey</button>
+          <button class="btn-primary btn-lg" id="btnConfirmAssessment" disabled aria-disabled="true">Tiếp tục: Pre-Test Setup →</button>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 2: Audio & Mic Check -->
-    <section class="view-section" id="viewDeviceCheck" aria-labelledby="deviceHeading">
+    <!-- ========================================== -->
+    <!-- VIEW 3: PRE-TEST SETUP (AUDIO & MIC CHECK) -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewDeviceCheck" style="display: none;" aria-labelledby="deviceHeading">
       <div class="device-card">
-        <span class="step-tag" aria-hidden="true">BƯỚC 2/2</span>
-        <h1 id="deviceHeading" class="view-title">Kiểm tra Tai nghe & Micro</h1>
-        <p class="subtitle">Đảm bảo bạn có thể nghe rõ người phỏng vấn ảo Ava và micro hoạt động tốt trước khi bắt đầu.</p>
+        <div class="card-header">
+          <span class="step-tag" aria-hidden="true">STEP 3 OF 5</span>
+          <h1 id="deviceHeading" class="view-title">Pre-Test Setup</h1>
+          <p class="subtitle">Kiểm tra âm thanh tai nghe và microphone của bạn để đảm bảo bài thi diễn ra chuẩn xác nhất.</p>
+        </div>
 
         <div class="check-grid">
-          <div class="check-box">
-            <div class="check-icon" aria-hidden="true">🔊</div>
+          <!-- Step 1: Volume Check -->
+          <div class="check-box" id="speakerBox">
+            <div class="check-icon-circle">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </div>
             <h2>1. Kiểm tra Loa / Tai nghe</h2>
-            <p>Bấm nút bên dưới để nghe thử giọng đọc câu hỏi mẫu từ giám khảo ảo Ava.</p>
-            <button class="btn-secondary" id="btnTestAudio" aria-label="Phát hoặc dừng âm thanh thử nghiệm">Phát âm thanh thử nghiệm</button>
-            <audio id="testAudioElement" src="assets/audio/01_Q1.mp3" preload="none"></audio>
+            <p class="check-desc">Click 'Phát âm thanh thử' để nghe giọng của giám khảo Ava và điều chỉnh âm lượng phù hợp.</p>
+            <button class="btn-secondary" id="btnPlayTestAudio" aria-label="Phát âm thanh kiểm tra tai nghe">
+              <span class="btn-audio-icon" aria-hidden="true">▶</span> Phát âm thanh thử
+            </button>
+            <audio id="testAudioElement" src="assets/01_Q1.mp3" preload="none"></audio>
           </div>
 
-          <div class="check-box">
-            <div class="check-icon" aria-hidden="true">🎙️</div>
-            <h2>2. Kiểm tra Microphone</h2>
-            <p>Bấm "Cho phép" khi trình duyệt yêu cầu quyền truy cập micro và thử nói một câu để xem tín hiệu âm lượng.</p>
-            <button class="btn-secondary" id="btnTestMic" aria-label="Bật và kiểm tra tín hiệu micro">Kiểm tra Micro</button>
-            <div class="mic-meter" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Mức âm lượng microphone" id="micMeter">
-              <div class="meter-bar" id="meterBar"></div>
+          <!-- Step 2: Mic Check -->
+          <div class="check-box" id="micBox">
+            <div class="check-icon-circle">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
             </div>
-            <span class="mic-status" id="micStatusText" role="status" aria-live="polite">Chưa kết nối micro</span>
+            <h2>2. Kiểm tra Micro thu âm</h2>
+            <p class="check-desc">Click 'Nói thử' và nói một câu vào micro (VD: "Hello Ava").</p>
+            <button class="btn-secondary" id="btnTestMic" aria-label="Bắt đầu kiểm tra microphone">🎙️ Bắt đầu nói thử</button>
+            <div class="mic-level-indicator" role="progressbar" id="micMeter" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Mức âm lượng micro">
+              <div class="meter-bar" id="meterBar" style="width: 0%;"></div>
+            </div>
+            <span class="mic-status-text" id="micStatusText" aria-live="polite">Micro chưa kích hoạt</span>
           </div>
         </div>
 
         <div class="device-footer">
-          <button class="btn-outline" id="btnBackToSurvey">← Quay lại chọn chủ đề</button>
-          <button class="btn-primary btn-lg" id="btnStartExam" disabled aria-disabled="true">Bắt đầu làm bài thi thật 🚀</button>
+          <button class="btn-secondary" id="btnBackToAssessment">← Quay lại Self Assessment</button>
+          <button class="btn-primary btn-lg" id="btnStartSample">Tiếp tục: Sample Question →</button>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 3: Examination Room (Mô phỏng phòng thi chuẩn OPIc) -->
-    <section class="view-section" id="viewExam" aria-labelledby="examRoomTitle">
-      <h1 id="examRoomTitle" class="sr-only">Phòng thi OPIc trực tuyến</h1>
-      <div class="exam-room">
+    <!-- ========================================== -->
+    <!-- VIEW 4: SAMPLE QUESTION (PRACTICE WITH AVA) -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewSampleQuestion" style="display: none;" aria-labelledby="sampleHeading">
+      <div class="exam-card">
+        <div class="card-header-exam">
+          <span class="step-tag" aria-hidden="true">STEP 4 OF 5: PRACTICE ROUND</span>
+          <h1 id="sampleHeading" class="view-title">Sample Question</h1>
+          <p class="subtitle">This stage is a practice question stage and does not affect the test score. Bạn có thể thử nghe câu hỏi, thử nút Replay (nghe lại) trong 5 giây và nói thử.</p>
+        </div>
 
-        <!-- Stage Area: Avatar Ava & Voice animation -->
-        <div class="ava-stage">
-          <div class="avatar-wrapper" id="avatarWrapper">
-            <img src="assets/avatar1.png" alt="Giám khảo ảo Ava" class="ava-avatar" id="avaImg" width="150" height="150">
-            <div class="sound-wave-ring ring-1" aria-hidden="true"></div>
-            <div class="sound-wave-ring ring-2" aria-hidden="true"></div>
-            <div class="sound-wave-ring ring-3" aria-hidden="true"></div>
+        <div class="interviewer-stage">
+          <div class="avatar-wrapper">
+            <img src="assets/avatar1.png" alt="Interviewer Ava" class="ava-avatar" id="sampleAvatar">
+            <div class="sound-wave-ring" id="sampleSoundWave" aria-hidden="true"></div>
           </div>
+          <h2 class="interviewer-name">Ava</h2>
+          <span class="interviewer-role">ACTFL Certified OPIc Tester</span>
 
-          <div class="interviewer-info">
-            <h2 class="ava-name">Ava</h2>
-            <span class="interviewer-role">ACTFL Certified OPIc AI Interviewer</span>
-          </div>
-
-          <!-- Question Prompt State Badge with WCAG live region -->
-          <div class="state-pill" id="examStatePill" role="status" aria-live="polite">
+          <!-- Pill status -->
+          <div class="exam-state-pill" id="sampleStatePill" role="status" aria-live="polite">
             <span class="pulsing-dot" aria-hidden="true"></span>
-            <span class="state-text" id="examStateText">Preparing question...</span>
+            <span id="sampleStateText">Click 'PLAY' to Listen</span>
           </div>
         </div>
 
-        <!-- Question Player & Control Box -->
-        <div class="question-control-box" role="region" aria-label="Bảng điều khiển câu hỏi">
-
-          <!-- Audio Waveform / Prompt Player -->
+        <!-- Sample Audio Player Bar -->
+        <div class="question-control-box">
           <div class="prompt-player-bar">
-            <button class="btn-replay" id="btnReplay" aria-label="Nghe lại câu hỏi (Tối đa 1 lần)">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path d="M1 4v6h6"></path>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-              </svg>
-              <span>Replay (<span id="replayCountText">1</span> left)</span>
+            <button class="btn-primary" id="btnSamplePlay">
+              <span aria-hidden="true">▶</span> Click 'PLAY' to Listen
             </button>
+            <button class="btn-replay" id="btnSampleReplay" disabled aria-disabled="true">
+              <span class="replay-icon" aria-hidden="true">↺</span> Replay (<span id="sampleReplayCount">1</span>)
+            </button>
+            <audio id="sampleAudioPlayer" src="https://api.englishopictest.com/media/AL/common_topic/audio_eng/Weather_1.mp3" preload="none"></audio>
+          </div>
 
+          <p class="sample-notice">💡 <strong>Mẹo:</strong> Trong bài thi thật, bạn có 5 giây sau khi câu hỏi phát xong để bấm nút Replay nghe lại 1 lần duy nhất.</p>
+
+          <!-- Recording Demo -->
+          <div class="sample-recording-box" id="sampleRecordingBox" style="display: none;">
+            <div class="rec-indicator"><span class="rec-dot"></span> Đang ghi âm thử giọng nói của bạn...</div>
+            <button class="btn-secondary" id="btnSampleStopRec">Dừng ghi âm thử</button>
+          </div>
+        </div>
+
+        <div class="exam-actions">
+          <button class="btn-secondary" id="btnSampleBack">← Quay lại Pre-Test Setup</button>
+          <button class="btn-primary btn-lg" id="btnProceedToBegin">Tiếp tục: Begin Test →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 5: BEGIN TEST (INSTRUCTIONS & RULES) -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewBeginTest" style="display: none;" aria-labelledby="beginHeading">
+      <div class="survey-card">
+        <div class="card-header">
+          <span class="step-tag" aria-hidden="true">STEP 5 OF 5: FINAL PREPARATION</span>
+          <h1 id="beginHeading" class="view-title">Are you ready? (Trước khi bắt đầu)</h1>
+          <p class="subtitle">Vui lòng đọc kỹ các lưu ý quan trọng dưới đây theo quy chế thi OPIc chính thức của ACTFL.</p>
+        </div>
+
+        <div class="rules-grid">
+          <div class="rule-card">
+            <div class="rule-icon">🚫</div>
+            <div class="rule-content">
+              <h3>Remain on the Test Page</h3>
+              <p>Do not open any other site, page, or program while the test is in progress, or the test will close.</p>
+            </div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-icon">⚠️</div>
+            <div class="rule-content">
+              <h3>Do not Refresh or Go Back</h3>
+              <p>If you refresh the page or click on the Back button during the assessment, your test session will terminate.</p>
+            </div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-icon">⏱️</div>
+            <div class="rule-content">
+              <h3>Time is Precious (30 Minutes)</h3>
+              <p>You have 30 minutes to complete 15 questions. Đồng hồ tổng sẽ bắt đầu đếm ngược ngay sau khi bạn click Begin.</p>
+            </div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-icon">🗣️</div>
+            <div class="rule-content">
+              <h3>Expressive Speaking</h3>
+              <p>Give a very detailed and spontaneous response to each question to show how great you are!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-config-summary" id="testConfigSummary">
+          <!-- Summary of Track and Topics will be injected here -->
+        </div>
+
+        <div class="survey-footer">
+          <button class="btn-secondary" id="btnBeginBack">← Quay lại kiểm tra</button>
+          <button class="btn-primary btn-lg pulse-btn" id="btnRealBegin">Bắt đầu làm bài thi thật (Begin) 🚀</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 6: REAL EXAM (15 QUESTIONS) -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewExam" style="display: none;" aria-labelledby="interviewerTitle">
+      <div class="exam-card">
+        
+        <!-- Interviewer Ava Center Stage -->
+        <div class="interviewer-stage">
+          <div class="avatar-wrapper">
+            <img src="assets/avatar1.png" alt="Giám khảo ảo Ava" class="ava-avatar" id="avaImg">
+            <div class="sound-wave-ring" id="soundWaveRing" aria-hidden="true"></div>
+          </div>
+          <h2 class="interviewer-name" id="interviewerTitle">Ava</h2>
+          <span class="interviewer-role">ACTFL Certified OPIc Tester</span>
+
+          <!-- Status Indicator Pill with ARIA Live -->
+          <div class="exam-state-pill" id="examStatePill" role="status" aria-live="polite">
+            <span class="pulsing-dot" aria-hidden="true"></span>
+            <span id="examStateText">Chuẩn bị câu hỏi...</span>
+          </div>
+        </div>
+
+        <!-- Question Controls & Audio Bar -->
+        <div class="question-control-box">
+          
+          <div class="prompt-player-bar">
+            <button class="btn-replay" id="btnReplay" disabled aria-disabled="true" aria-label="Nghe lại câu hỏi (Tối đa 1 lần trong 5 giây)">
+              <span class="replay-icon" aria-hidden="true">↺</span> Replay (<span id="replayCountText">1</span>)
+            </button>
             <div class="prompt-audio-waves" id="promptAudioWaves" aria-hidden="true">
               <span class="wave-bar"></span>
               <span class="wave-bar"></span>
               <span class="wave-bar"></span>
               <span class="wave-bar"></span>
               <span class="wave-bar"></span>
-              <span class="wave-bar"></span>
             </div>
-
-            <div class="hidden-audio-container">
-              <audio id="examAudioPlayer" preload="auto"></audio>
-            </div>
+            <audio id="examAudioPlayer" preload="none"></audio>
           </div>
 
-          <!-- Accessible Transcript Disclosure (WCAG 4.1.2) -->
-          <div class="transcript-collapsible">
-            <button class="btn-link" id="btnToggleTranscript" type="button" aria-expanded="false" aria-controls="transcriptBox">
+          <!-- Practice Mode: Accessible Transcript Disclosure Toggle -->
+          <div class="practice-transcript-toggle">
+            <button class="btn-text-action" id="btnToggleTranscript" type="button" aria-expanded="false" aria-controls="transcriptBox">
               <span aria-hidden="true">👁️</span> Hiển thị gợi ý đề bài (Practice Mode)
             </button>
-            <div class="transcript-box" id="transcriptBox" style="display: none;">
-              <p class="transcript-topic">Topic: <strong id="currentTopicName">Introduction</strong></p>
-              <p class="transcript-content" id="currentQuestionText">Loading...</p>
+            <div class="transcript-box" id="transcriptBox" style="display: none;" role="region" aria-label="Nội dung đề bài">
+              <p id="promptTextDisplay" class="prompt-text">Đang tải câu hỏi...</p>
             </div>
           </div>
 
-          <!-- Live Recording Visualizer -->
-          <div class="recording-panel" id="recordingPanel" style="display: none;" role="region" aria-label="Trạng thái ghi âm giọng nói">
-            <div class="rec-indicator" role="status" aria-live="assertive">
-              <span class="rec-dot" aria-hidden="true"></span>
-              <span>RECORDING YOUR ANSWER</span>
+          <!-- Answer Recording Panel -->
+          <div class="recording-panel" id="recordingPanel" style="display: none;" role="region" aria-label="Khu vực ghi âm câu trả lời">
+            <div class="rec-status-row">
+              <div class="rec-badge" aria-label="Đang ghi âm câu trả lời của bạn">
+                <span class="rec-dot" aria-hidden="true"></span> REC
+              </div>
+              <div class="live-visualizer" id="liveVisualizer" aria-hidden="true">
+                <!-- Dynamic Audio Frequency Bars -->
+                <span class="vis-bar"></span><span class="vis-bar"></span><span class="vis-bar"></span>
+                <span class="vis-bar"></span><span class="vis-bar"></span><span class="vis-bar"></span>
+                <span class="vis-bar"></span><span class="vis-bar"></span><span class="vis-bar"></span>
+                <span class="vis-bar"></span><span class="vis-bar"></span><span class="vis-bar"></span>
+              </div>
             </div>
-            <canvas id="liveVisualizer" width="480" height="60" aria-label="Biểu đồ sóng âm trực tiếp từ microphone"></canvas>
+
+            <!-- Speaking Timer with Accessible Progressbar -->
+            <div class="speaking-timer-container">
+              <div class="timer-label" id="speakingTimerLabel">Thời gian nói còn lại:</div>
+              <div class="timer-digits" id="speakingTimerDigits" aria-live="polite">02:00</div>
+              <div class="timer-progress-track" role="progressbar" id="timerProgressTrack" aria-valuenow="120" aria-valuemin="0" aria-valuemax="120" aria-label="Tiến trình thời gian nói">
+                <div class="timer-progress-fill" id="timerProgressFill" style="width: 100%;"></div>
+              </div>
+            </div>
           </div>
 
-          <!-- Question Speaking Countdown Timer with Accessible Progressbar -->
-          <div class="speaking-timer-container">
-            <div class="timer-top-row">
-              <span class="timer-title" id="speakingTimerLabel">Speaking Time Remaining</span>
-              <span class="timer-digits" id="speakingTimerDigits" aria-live="polite">02:00</span>
-            </div>
-            <div class="timer-progress-track" role="progressbar" id="timerProgressTrack" aria-valuenow="120" aria-valuemin="0" aria-valuemax="120" aria-label="Thời gian trả lời còn lại">
-              <div class="timer-progress-fill" id="timerProgressFill"></div>
-            </div>
-          </div>
+        </div>
 
-          <!-- Next Button -->
-          <div class="exam-actions">
-            <span class="auto-submit-hint" id="autoSubmitHint">Khi hết giờ hệ thống sẽ tự động nộp và chuyển câu.</span>
-            <button class="btn-primary btn-next" id="btnNextQuestion" aria-label="Chuyển sang câu hỏi tiếp theo">
-              <span>Next Question</span>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
-            </button>
-          </div>
-
+        <!-- Action Next Button -->
+        <div class="exam-actions">
+          <button class="btn-primary btn-lg" id="btnNextQuestion" disabled aria-disabled="true" aria-label="Chuyển sang câu hỏi tiếp theo">
+            Câu tiếp theo (Next) →
+          </button>
         </div>
 
       </div>
     </section>
 
-    <!-- VIEW 4: Evaluation & Score Report -->
-    <section class="view-section" id="viewReport" aria-labelledby="reportHeading">
+    <!-- ========================================== -->
+    <!-- VIEW 7: EVALUATION & REPORT -->
+    <!-- ========================================== -->
+    <section class="view-section" id="viewReport" style="display: none;" aria-labelledby="reportHeading">
       <div class="report-container">
         
         <div class="report-header">
-          <div class="score-badge-card" role="region" aria-label="Cấp độ đạt được">
-            <span class="badge-sub">ACTFL OFFICIAL RATING</span>
-            <span class="grade-al" id="finalOPIcLevel" aria-label="Level: AL">AL</span>
-            <h2 class="grade-title" id="finalLevelTitle">Advanced Low</h2>
+          <div class="grade-badge-circle" aria-label="Đánh giá kết quả OPIc">
+            <span class="grade-al" id="finalOPIcLevel" aria-label="Cấp độ đạt được: AL">AL</span>
+            <span class="grade-title" id="finalLevelTitle">Advanced Low</span>
           </div>
-
           <div class="overall-summary">
+            <span class="step-tag" aria-hidden="true">BÁO CÁO ĐÁNH GIÁ CHUẨN ACTFL</span>
             <h1 id="reportHeading" class="view-title">Kết quả đánh giá thi thử OPIc AI</h1>
-            <p class="summary-desc" id="summaryDescription">Bạn đã hoàn thành xuất sắc bài thi thử OPIc. Khả năng miêu tả chi tiết, xử lý tình huống linh hoạt và phát âm tự nhiên đạt mức đánh giá tiêu chuẩn.</p>
+            <p class="subtitle">Được chấm điểm dựa trên 4 tiêu chí cốt lõi của ACTFL OPIc và thuật toán phân loại điểm chuẩn.</p>
             <div class="overall-meta" role="list">
               <span role="listitem">Tổng số câu trả lời: <strong id="reportTotalAnswers">15/15</strong></span>
               <span role="listitem">Thời gian làm bài: <strong id="reportTimeSpent">24m 15s</strong></span>
