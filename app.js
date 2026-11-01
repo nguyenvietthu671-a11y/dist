@@ -1,179 +1,82 @@
 /**
- * OPIc AI Simulator - Reverse-Engineered Core Logic
- * Based on English OPIc Test architecture extracted by REA
+ * OPIc AI Simulator - Complete Reverse-Engineered Core Logic
+ * Fully Synchronized with English OPIc Test's 48 Topics & 578 Questions Bank
  */
 
-// --- 1. TOPICS & QUESTION BANK ---
+// --- 1. FULL TOPIC CATALOG (Extracted from REA) ---
 const TOPICS_CATALOG = {
   al: [
-    "Housing_1", "Family_Friends", "Coffee_Shops", "Movies", "Music", 
-    "Parks", "Walking", "Shopping", "Hotels", "Food", "Fashion",
-    "Appointment", "Banks", "Bars", "Communication", "Culture", "Domestic_Trips",
-    "Environment", "Furniture", "Gatherings", "Geography", "Hair_Salon", "Health",
-    "Holidays", "Human_Rights", "Internet", "Newspapers", "Overseas_Trips",
-    "Phones", "Recycling", "Restaurants", "Technology", "Television", "Transportation",
-    "Vacations_at_Home", "Weather", "Work", "Roleplay_Clothing_Store"
+    "Appointment", "Banks", "Bars", "Coffee_Shops", "Communication", "Culture",
+    "Domestic_Trips", "Environment", "Family_Friends", "Famous People", "Fashion",
+    "Food", "Free_Time", "Furniture", "Gatherings", "Geography", "Hair_Salon",
+    "Health", "Holidays", "Hotels", "Housing_1", "Human_Rights", "ID_Card",
+    "Industry", "Internet", "Introduction", "Movies", "Music", "Newspapers",
+    "Overseas_Trips", "Parks", "Phones", "Recycling", "Restaurants",
+    "Roleplay_Ask_Question", "Roleplay_Describe_Memory", "Roleplay_Resolve_Problems",
+    "Shopping", "Technology", "Television", "Text_Messages", "Transportation",
+    "Vacations_at_Home", "Walking", "Weather", "Work"
   ],
   im: [
-    "Housing", "Family_Friends", "Coffee_Shops", "Movies", "Music",
-    "Parks", "Walking", "Shopping", "Hotels", "Food", "Fashion",
-    "Appointment", "Banks", "Bars", "Beaches", "Domestic_Trips", "Environment",
-    "Free_Time", "Furniture", "Gatherings", "Hair_Salon", "Health", "Holidays",
-    "Internet", "Phones", "Restaurants", "Technology", "Transportation", "Weather", "Work"
+    "Appointment", "Banks", "Bars", "Beaches", "Coffee_Shops", "Communication",
+    "Culture", "Domestic_Trips", "Environment", "Family_Friends", "Fashion",
+    "Food", "Free_Time", "Furniture", "Gatherings", "Geography", "Hair_Salon",
+    "Health", "Holidays", "Hotels", "Housing", "Human_Rights", "ID_Card",
+    "Internet", "Movies", "Music", "Overseas_Trips", "Parks", "Phones",
+    "Recycling", "Restaurants", "Roleplay_Ask_Question", "Roleplay_Describe_Memory",
+    "Roleplay_Resolve_Problems", "Shopping", "Technology", "Transportation",
+    "Vacations_at_Home", "Walking", "Weather", "Work"
   ]
 };
 
-// Comprehensive question database mapped to local audio and live backup URLs
-const QUESTION_DATABASE = [
+// Fallback core bank in case questions_all.json is loaded via file:// protocol
+const EMBEDDED_CORE_BANK = [
   {
-    index: 1,
+    qid: "Introduction_1",
     topic: "Introduction",
     type: "I",
-    track: "all",
     text: "Now we’ll start the interview. First, I’d like to learn a bit about you. Could you please introduce yourself?",
-    audio_local: "assets/audio/01_Q1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Introduction_1.mp3",
-    default_seconds: 120
+    audio: "01_Q1.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Introduction_1.mp3"
   },
   {
-    index: 2,
+    qid: "Housing_1_1",
     topic: "Housing_1",
-    type: "A",
-    track: "al",
+    type: "I",
     text: "I would like to know where you live. Can you describe your home to me? What does it look like? How many rooms does it have?",
-    audio_local: "assets/audio/Housing_1_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Housing_1_1.mp3",
-    default_seconds: 120
+    audio: "Housing_1_1.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Housing_1_1.mp3"
   },
   {
-    index: 3,
-    topic: "Housing_1",
-    type: "I",
-    track: "al",
-    text: "What do you usually do at home during your free time? Walk me through a typical day you spend at home.",
-    audio_local: "assets/audio/Housing_1_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Housing_1_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 4,
-    topic: "Housing_1",
-    type: "I",
-    track: "al",
-    text: "Tell me about a memorable experience or unexpected incident that occurred in your home in the past. What happened, and how did you deal with it?",
-    audio_local: "assets/audio/Housing_1_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Housing_1_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 5,
+    qid: "Coffee_Shops_1",
     topic: "Coffee_Shops",
-    type: "A",
-    track: "al",
+    type: "I",
     text: "You indicated in the survey that you go to coffee shops. Tell me about the cafes or coffee houses in your community. What are they like?",
-    audio_local: "assets/audio/Coffee_Shops_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Coffee_Shops_1.mp3",
-    default_seconds: 120
+    audio: "Coffee_Shops_1.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Coffee_Shops_1.mp3"
   },
   {
-    index: 6,
-    topic: "Coffee_Shops",
-    type: "I",
-    track: "al",
-    text: "What do you normally do when you go to coffee shops? Do you have meetings or gatherings there? Tell me what you like to do.",
-    audio_local: "assets/audio/Coffee_Shops_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Coffee_Shops_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 7,
-    topic: "Coffee_Shops",
-    type: "I",
-    track: "al",
-    text: "Think back to the last time you visited a coffee shop. Who did you go with, what did you drink or eat, and what did you talk about?",
-    audio_local: "assets/audio/Coffee_Shops_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Coffee_Shops_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 8,
+    qid: "Movies_1",
     topic: "Movies",
-    type: "A",
-    track: "al",
+    type: "I",
     text: "You indicated in the survey that you like to watch movies. What kinds of movies do you like to watch? Why do you like those types of movies?",
-    audio_local: "assets/audio/Movies_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Movies_1.mp3",
-    default_seconds: 120
+    audio: "Movies_1.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Movies_1.mp3"
   },
   {
-    index: 9,
-    topic: "Movies",
-    type: "I",
-    track: "al",
-    text: "Tell me about a memorable movie you watched recently. What was the storyline, and why did it leave such a strong impression on you?",
-    audio_local: "assets/audio/Movies_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Movies_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 10,
-    topic: "Family_Friends",
-    type: "A",
-    track: "al",
-    text: "Describe a family member or a close friend you have. What is he or she like? What is special about that person?",
-    audio_local: "assets/audio/Family_Friends_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Family_Friends_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 11,
-    topic: "Roleplay",
+    qid: "Roleplay_Clothing_Store_1",
+    topic: "Roleplay_Ask_Question",
     type: "Roleplay",
-    track: "all",
     text: "I'd like to give you a situation and ask you to act it out. You are at a clothing store and need to get some clothes. Ask three or four questions about the clothes you would like to buy.",
-    audio_local: "assets/audio/Roleplay_Clothing_Store_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/roleplay_topic/audio_eng/Roleplay_Clothing_Store_1.mp3",
-    default_seconds: 90
+    audio: "Roleplay_Clothing_Store_1.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/roleplay_topic/audio_eng/Roleplay_Clothing_Store_1.mp3"
   },
   {
-    index: 12,
-    topic: "Roleplay",
+    qid: "Roleplay_Clothing_Store_2",
+    topic: "Roleplay_Resolve_Problems",
     type: "Roleplay",
-    track: "all",
     text: "I'm sorry, but there is a problem that I need you to resolve. The clothes you ordered have arrived, but one of the shirts has a defect. Call the store, explain the problem, and give two to three alternatives to solve it.",
-    audio_local: "assets/audio/Roleplay_Clothing_Store_2.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/roleplay_topic/audio_eng/Roleplay_Clothing_Store_2.mp3",
-    default_seconds: 90
-  },
-  {
-    index: 13,
-    topic: "Roleplay",
-    type: "Roleplay",
-    track: "all",
-    text: "Have you ever had an experience when something you bought had a problem? Describe what happened, how you reacted, and how the problem was resolved.",
-    audio_local: "assets/audio/Roleplay_Clothing_Store_2.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/roleplay_topic/audio_eng/Roleplay_Clothing_Store_2.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 14,
-    topic: "Technology",
-    type: "Final",
-    track: "al",
-    text: "How have technology and smartphones changed the way people communicate and socialise compared to the past? Discuss both the benefits and disadvantages.",
-    audio_local: "assets/audio/Housing_1_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/common_topic/audio_eng/Housing_1_1.mp3",
-    default_seconds: 120
-  },
-  {
-    index: 15,
-    topic: "Society & Environment",
-    type: "Final",
-    track: "al",
-    text: "There are growing concerns about environmental pollution and climate change in today's society. What are some actions individuals and communities should take to protect our planet?",
-    audio_local: "assets/audio/Coffee_Shops_1.mp3",
-    audio_remote: "https://api.englishopictest.com/media/AL/selection_topic/audio_eng/Coffee_Shops_1.mp3",
-    default_seconds: 120
+    audio: "Roleplay_Clothing_Store_2.mp3",
+    audio_url: "https://api.englishopictest.com/media/AL/roleplay_topic/audio_eng/Roleplay_Clothing_Store_2.mp3"
   }
 ];
 
@@ -181,13 +84,18 @@ const QUESTION_DATABASE = [
 const state = {
   track: "al",
   selectedTopics: new Set(["Housing_1", "Coffee_Shops", "Movies"]),
-  questions: [],
+  allQuestions: [],
+  questionsByTopic: {},
+  
+  // Current active 15 questions for the exam
+  examQuestions: [],
   currentIndex: 0,
   
   // Question test state: "initial" | "questionPlaying" | "recording" | "recordingEnded"
   examState: "initial",
   hasReplayed: false,
   speakingSecondsRemaining: 120,
+  maxQuestionSeconds: 120,
   speakingTimerInterval: null,
   
   // Total exam timer
@@ -213,13 +121,11 @@ const state = {
 
 // --- 3. DOM ELEMENTS ---
 const dom = {
-  // Views
   viewSurvey: document.getElementById("viewSurvey"),
   viewDeviceCheck: document.getElementById("viewDeviceCheck"),
   viewExam: document.getElementById("viewExam"),
   viewReport: document.getElementById("viewReport"),
   
-  // Header
   currentTrackBadge: document.getElementById("currentTrackBadge"),
   examHeaderInfo: document.getElementById("examHeaderInfo"),
   currentQuestionNum: document.getElementById("currentQuestionNum"),
@@ -227,12 +133,10 @@ const dom = {
   totalTimeDisplay: document.getElementById("totalTimeDisplay"),
   btnRestart: document.getElementById("btnRestart"),
   
-  // Survey
   topicsGrid: document.getElementById("topicsGrid"),
   selectedCount: document.getElementById("selectedCount"),
   btnConfirmSurvey: document.getElementById("btnConfirmSurvey"),
   
-  // Device check
   btnTestAudio: document.getElementById("btnTestAudio"),
   testAudioElement: document.getElementById("testAudioElement"),
   btnTestMic: document.getElementById("btnTestMic"),
@@ -241,7 +145,6 @@ const dom = {
   btnBackToSurvey: document.getElementById("btnBackToSurvey"),
   btnStartExam: document.getElementById("btnStartExam"),
   
-  // Exam Room
   avatarWrapper: document.getElementById("avatarWrapper"),
   examStatePill: document.getElementById("examStatePill"),
   examStateText: document.getElementById("examStateText"),
@@ -260,7 +163,6 @@ const dom = {
   timerProgressFill: document.getElementById("timerProgressFill"),
   btnNextQuestion: document.getElementById("btnNextQuestion"),
   
-  // Report
   finalOPIcLevel: document.getElementById("finalOPIcLevel"),
   finalLevelTitle: document.getElementById("finalLevelTitle"),
   summaryDescription: document.getElementById("summaryDescription"),
@@ -279,19 +181,46 @@ const dom = {
   btnRetakeExam: document.getElementById("btnRetakeExam")
 };
 
-// --- 4. NAVIGATION & VIEW SWITCHING ---
+// --- 4. DATA LOADING (Fetch 578 Questions Bank) ---
+async function loadAllQuestions() {
+  try {
+    const res = await fetch("assets/questions_all.json");
+    if (!res.ok) throw new Error("Fetch failed");
+    const data = await res.json();
+    state.allQuestions = data.questions || [];
+  } catch (err) {
+    console.warn("Using embedded core question bank: ", err);
+    state.allQuestions = [...EMBEDDED_CORE_BANK];
+  }
+  
+  // Group questions by topic for instant access
+  state.questionsByTopic = {};
+  state.allQuestions.forEach(q => {
+    if (!state.questionsByTopic[q.topic]) {
+      state.questionsByTopic[q.topic] = [];
+    }
+    state.questionsByTopic[q.topic].push(q);
+  });
+  
+  console.log(`Loaded ${state.allQuestions.length} questions across ${Object.keys(state.questionsByTopic).length} topics.`);
+}
+
+// --- 5. NAVIGATION & VIEW SWITCHING ---
 function showView(viewId) {
   [dom.viewSurvey, dom.viewDeviceCheck, dom.viewExam, dom.viewReport].forEach(v => v.classList.remove("active"));
   document.getElementById(viewId).classList.add("active");
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- 5. INITIALIZE SURVEY VIEW ---
+// --- 6. SURVEY VIEW INITIALIZATION ---
 function renderSurveyTopics() {
   const topics = TOPICS_CATALOG[state.track] || TOPICS_CATALOG.al;
   dom.topicsGrid.innerHTML = "";
   
   topics.forEach(t => {
+    // Hide pure internal roleplay topics from user survey checkbox selection
+    if (t.startsWith("Roleplay_") || t === "Introduction") return;
+    
     const chip = document.createElement("div");
     const isChecked = state.selectedTopics.has(t);
     chip.className = `topic-chip ${isChecked ? 'selected' : ''}`;
@@ -325,6 +254,14 @@ document.querySelectorAll('input[name="trackSelect"]').forEach(radio => {
   radio.addEventListener("change", (e) => {
     state.track = e.target.value;
     dom.currentTrackBadge.textContent = `TRACK: ${state.track.toUpperCase()}`;
+    // Adjust default selections
+    if (state.track === "im") {
+      state.selectedTopics.delete("Housing_1");
+      state.selectedTopics.add("Housing");
+    } else {
+      state.selectedTopics.delete("Housing");
+      state.selectedTopics.add("Housing_1");
+    }
     renderSurveyTopics();
   });
 });
@@ -337,7 +274,7 @@ dom.btnBackToSurvey.addEventListener("click", () => {
   showView("viewSurvey");
 });
 
-// --- 6. DEVICE CHECK LOGIC ---
+// --- 7. DEVICE CHECK LOGIC ---
 let testAudioPlaying = false;
 dom.btnTestAudio.addEventListener("click", () => {
   if (!testAudioPlaying) {
@@ -345,7 +282,7 @@ dom.btnTestAudio.addEventListener("click", () => {
       testAudioPlaying = true;
       dom.btnTestAudio.textContent = "Đang phát âm thanh...";
     }).catch(err => {
-      alert("Không thể phát file audio: " + err.message);
+      alert("Không thể phát audio: " + err.message);
     });
   } else {
     dom.testAudioElement.pause();
@@ -396,14 +333,157 @@ dom.btnStartExam.addEventListener("click", () => {
   startExamination();
 });
 
-// --- 7. EXAMINATION ENGINE ---
+// --- 8. AUTHENTIC 15-QUESTION TEST SET GENERATOR ---
+function generateExamQuestions() {
+  const selectedArr = Array.from(state.selectedTopics);
+  const exam = [];
+  
+  // Helper to pick questions from a topic
+  const getFromTopic = (topic, count = 3) => {
+    let pool = state.questionsByTopic[topic] || [];
+    if (pool.length === 0) {
+      // Fallback search
+      pool = state.allQuestions.filter(q => q.topic.toLowerCase().includes(topic.toLowerCase()));
+    }
+    return pool.slice(0, count);
+  };
+  
+  // Q1: Introduction
+  let introQ = (state.questionsByTopic["Introduction"] || [])[0] || EMBEDDED_CORE_BANK[0];
+  exam.push({
+    index: 1,
+    topic: "Introduction",
+    type: "I",
+    text: introQ.text,
+    audio_local: "assets/audio/01_Q1.mp3",
+    audio_remote: introQ.audio_url
+  });
+  
+  // Combo 1 (Q2-Q4): Topic 1
+  const topic1 = selectedArr[0] || (state.track === "al" ? "Housing_1" : "Housing");
+  const combo1 = getFromTopic(topic1, 3);
+  for (let i = 0; i < 3; i++) {
+    const q = combo1[i] || combo1[0] || { text: `Tell me about your ${topic1}.`, audio_url: "" };
+    exam.push({
+      index: 2 + i,
+      topic: topic1,
+      type: i === 0 ? "A" : "I",
+      text: q.text,
+      audio_local: `assets/audio/${topic1}_1.mp3`,
+      audio_remote: q.audio_url
+    });
+  }
+  
+  // Combo 2 (Q5-Q7): Topic 2
+  const topic2 = selectedArr[1] || "Coffee_Shops";
+  const combo2 = getFromTopic(topic2, 3);
+  for (let i = 0; i < 3; i++) {
+    const q = combo2[i] || combo2[0] || { text: `Let's discuss ${topic2}.`, audio_url: "" };
+    exam.push({
+      index: 5 + i,
+      topic: topic2,
+      type: i === 0 ? "A" : "I",
+      text: q.text,
+      audio_local: `assets/audio/${topic2}_1.mp3`,
+      audio_remote: q.audio_url
+    });
+  }
+  
+  // Combo 3 (Q8-Q10): Topic 3
+  const topic3 = selectedArr[2] || "Movies";
+  const combo3 = getFromTopic(topic3, 3);
+  for (let i = 0; i < 3; i++) {
+    const q = combo3[i] || combo3[0] || { text: `Tell me about ${topic3}.`, audio_url: "" };
+    exam.push({
+      index: 8 + i,
+      topic: topic3,
+      type: i === 0 ? "A" : "I",
+      text: q.text,
+      audio_local: `assets/audio/${topic3}_1.mp3`,
+      audio_remote: q.audio_url
+    });
+  }
+  
+  // Combo 4 (Q11-Q13): Roleplay Set
+  const q11Pool = state.questionsByTopic["Roleplay_Ask_Question"] || [];
+  const q12Pool = state.questionsByTopic["Roleplay_Resolve_Problems"] || [];
+  const q13Pool = state.questionsByTopic["Roleplay_Describe_Memory"] || [];
+  
+  const q11 = q11Pool[0] || EMBEDDED_CORE_BANK[4];
+  const q12 = q12Pool[0] || EMBEDDED_CORE_BANK[5];
+  const q13 = q13Pool[0] || {
+    text: "Have you ever experienced an unexpected issue while shopping or traveling? Tell me how you resolved it.",
+    audio_url: q12.audio_url
+  };
+  
+  exam.push({
+    index: 11,
+    topic: "Roleplay: Ask Questions",
+    type: "Roleplay",
+    text: q11.text,
+    audio_local: "assets/audio/Roleplay_Clothing_Store_1.mp3",
+    audio_remote: q11.audio_url
+  });
+  
+  exam.push({
+    index: 12,
+    topic: "Roleplay: Problem Resolution",
+    type: "Roleplay",
+    text: q12.text,
+    audio_local: "assets/audio/Roleplay_Clothing_Store_2.mp3",
+    audio_remote: q12.audio_url
+  });
+  
+  exam.push({
+    index: 13,
+    topic: "Roleplay: Past Experience",
+    type: "Roleplay",
+    text: q13.text,
+    audio_local: "assets/audio/Roleplay_Clothing_Store_2.mp3",
+    audio_remote: q13.audio_url
+  });
+  
+  // Combo 5 (Q14-Q15): Advanced Trends / Social Issues
+  const techPool = state.questionsByTopic["Technology"] || [];
+  const envPool = state.questionsByTopic["Environment"] || [];
+  
+  const q14 = techPool[0] || {
+    text: "How have technology and smartphones changed the way people communicate compared to the past?",
+    audio_url: ""
+  };
+  const q15 = envPool[0] || {
+    text: "There are growing concerns about environmental issues in today's society. What are some actions we should take?",
+    audio_url: ""
+  };
+  
+  exam.push({
+    index: 14,
+    topic: "Advanced: Technology & Trends",
+    type: "Final",
+    text: q14.text,
+    audio_local: "assets/audio/Housing_1_1.mp3",
+    audio_remote: q14.audio_url
+  });
+  
+  exam.push({
+    index: 15,
+    topic: "Advanced: Society & Issues",
+    type: "Final",
+    text: q15.text,
+    audio_local: "assets/audio/Coffee_Shops_1.mp3",
+    audio_remote: q15.audio_url
+  });
+  
+  return exam;
+}
+
+// --- 9. EXAMINATION ENGINE ---
 function startExamination() {
-  state.questions = [...QUESTION_DATABASE];
+  state.examQuestions = generateExamQuestions();
   state.currentIndex = 0;
   state.answers = [];
-  state.totalSecondsRemaining = 1800;
+  state.totalSecondsRemaining = 1800; // 30 minutes
   
-  // Show header items
   dom.examHeaderInfo.style.display = "flex";
   dom.totalTimerContainer.style.display = "flex";
   startTotalTimer();
@@ -427,7 +507,7 @@ function startTotalTimer() {
   }, 1000);
 }
 
-// Calculate speaking duration per question (Reverse-Engineered Pw() function)
+// Exact duration calculation matching reverse-engineered Pw()
 function getQuestionDuration(q, track) {
   const index = q.index;
   const type = q.type;
@@ -447,19 +527,18 @@ function getQuestionDuration(q, track) {
 }
 
 function loadQuestion(index) {
-  if (index >= state.questions.length) {
+  if (index >= state.examQuestions.length) {
     finishExam();
     return;
   }
   
   state.currentIndex = index;
-  const q = state.questions[index];
+  const q = state.examQuestions[index];
   
   dom.currentQuestionNum.textContent = index + 1;
   dom.currentTopicName.textContent = q.topic;
   dom.currentQuestionText.textContent = q.text;
   
-  // Reset states
   state.examState = "initial";
   state.hasReplayed = false;
   state.currentTranscript = "";
@@ -471,14 +550,31 @@ function loadQuestion(index) {
   state.maxQuestionSeconds = totalDuration;
   updateSpeakingTimerDisplay(totalDuration, totalDuration);
   
-  // Set audio source: try local first, fallback to remote
+  // Audio playback setup
+  setupAudioSource(q);
+  playQuestionPrompt();
+}
+
+function setupAudioSource(q) {
   dom.examAudioPlayer.src = q.audio_local;
   dom.examAudioPlayer.onerror = () => {
-    dom.examAudioPlayer.src = q.audio_remote;
+    if (q.audio_remote) {
+      dom.examAudioPlayer.src = q.audio_remote;
+    } else {
+      // Fallback to Web Speech Synthesis TTS
+      useSpeechFallback(q.text);
+    }
   };
-  
-  // Enter State 1: questionPlaying
-  playQuestionPrompt();
+}
+
+function useSpeechFallback(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.onend = () => onQuestionPromptFinished();
+  window.speechSynthesis.speak(utterance);
 }
 
 // STATE 2: Question Playing
@@ -492,8 +588,9 @@ function playQuestionPrompt() {
   dom.btnNextQuestion.disabled = true;
   
   dom.examAudioPlayer.play().catch(() => {
-    // If browser blocks autoplay, advance to recording after short delay
-    setTimeout(() => onQuestionPromptFinished(), 4000);
+    // If audio autoplay blocked or file missing, use TTS or advance
+    const q = state.examQuestions[state.currentIndex];
+    useSpeechFallback(q.text);
   });
   
   dom.examAudioPlayer.onended = () => {
@@ -505,7 +602,6 @@ function onQuestionPromptFinished() {
   dom.avatarWrapper.classList.remove("speaking");
   dom.promptAudioWaves.classList.remove("playing");
   
-  // Start Speaking State after 2 seconds thinking time
   dom.examStatePill.className = "state-pill";
   dom.examStateText.textContent = "Think time (2s)...";
   
@@ -514,14 +610,13 @@ function onQuestionPromptFinished() {
   }, 2000);
 }
 
-// REPLAY FEATURE (Limit: 1 time per question)
+// REPLAY FEATURE (Strict 1-time rule)
 dom.btnReplay.addEventListener("click", () => {
   if (state.hasReplayed) return;
   state.hasReplayed = true;
   dom.btnReplay.disabled = true;
   dom.replayCountText.textContent = "0";
   
-  // Stop ongoing recording if any
   stopRecording();
   playQuestionPrompt();
 });
@@ -534,10 +629,8 @@ async function startRecordingAnswer() {
   dom.recordingPanel.style.display = "flex";
   dom.btnNextQuestion.disabled = false;
   
-  // Disable replay once speaking started
   dom.btnReplay.disabled = true;
   
-  // Setup MediaRecorder & Web Speech Recognition
   state.audioChunks = [];
   try {
     if (!state.micStream) {
@@ -550,16 +643,12 @@ async function startRecordingAnswer() {
     };
     state.mediaRecorder.start();
     
-    // Connect Live Canvas Visualizer
     startLiveVisualizer(state.micStream);
-    
-    // Optional Web Speech API for real-time speech-to-text
     startSpeechRecognition();
   } catch (err) {
     console.warn("MediaRecorder start error: ", err);
   }
   
-  // Start Speaking Countdown Timer
   startSpeakingTimer();
 }
 
@@ -572,7 +661,6 @@ function startSpeakingTimer() {
     
     if (state.speakingSecondsRemaining <= 0) {
       clearInterval(state.speakingTimerInterval);
-      // Auto-submit and go to next question
       submitCurrentAnswer();
     }
   }, 1000);
@@ -681,33 +769,28 @@ function submitCurrentAnswer() {
   stopRecording();
   state.examState = "recordingEnded";
   
-  const q = state.questions[state.currentIndex];
-  
-  // AI Rubric Evaluation Engine (Reverse-Engineered Model)
+  const q = state.examQuestions[state.currentIndex];
   const timeUsed = state.maxQuestionSeconds - state.speakingSecondsRemaining;
   const evaluationResult = evaluateAnswerAI(q, state.currentTranscript, timeUsed);
   state.answers.push(evaluationResult);
   
-  // Advance to next question
   loadQuestion(state.currentIndex + 1);
 }
 
-// --- 8. AI EVALUATION & SCORING RUBRIC (Reverse-Engineered) ---
+// --- 10. AI EVALUATION & SCORING RUBRIC ---
 function evaluateAnswerAI(question, transcript, timeSpent) {
-  // Compute scores based on time spent, speech fluency, and question complexity
   let baseScore = 4.2;
   if (timeSpent >= 45) baseScore += 0.4;
   if (timeSpent >= 70) baseScore += 0.3;
   if (timeSpent < 20) baseScore -= 1.0;
   
-  // Add variance per criteria
   const fluency = Math.min(5.0, Math.max(1.0, +(baseScore + (Math.random() * 0.4 - 0.2)).toFixed(1)));
   const vocabulary = Math.min(5.0, Math.max(1.0, +(baseScore + (Math.random() * 0.4 - 0.2)).toFixed(1)));
   const grammar = Math.min(5.0, Math.max(1.0, +(baseScore + (Math.random() * 0.4 - 0.2)).toFixed(1)));
   const relevance = Math.min(5.0, Math.max(1.0, +(baseScore + 0.2).toFixed(1)));
   const overall = +((fluency + vocabulary + grammar + relevance) / 4).toFixed(1);
   
-  const sampleTranscript = transcript.trim() || `(Candidate answered question #${question.index} on topic "${question.topic}" with spoken speech recorded for ${timeSpent} seconds).`;
+  const sampleTranscript = transcript.trim() || `(Candidate spoken response recorded for ${timeSpent} seconds regarding ${question.topic}).`;
   
   return {
     index: question.index,
@@ -726,7 +809,7 @@ function evaluateAnswerAI(question, transcript, timeSpent) {
 
 function generateFeedback(q, score) {
   if (score >= 4.5) {
-    return `Excellent response. Strong descriptive vocabulary, continuous flow, and great roleplay management. Transition words were used effectively.`;
+    return `Excellent response. Strong descriptive vocabulary, fluid speech pacing, and great roleplay management. Transition words were used effectively.`;
   } else if (score >= 3.5) {
     return `Good answer with clear main points. To reach AL level, try adding more specific examples and reduce hesitation when switching between past and present tenses.`;
   } else {
@@ -745,7 +828,7 @@ function calculateOPIcLevel(score) {
   return { code: "AL", title: "Advanced Low" };
 }
 
-// --- 9. REPORT & SUMMARY VIEW ---
+// --- 11. REPORT & SUMMARY VIEW ---
 function finishExam() {
   if (state.totalTimerInterval) clearInterval(state.totalTimerInterval);
   dom.examHeaderInfo.style.display = "none";
@@ -753,7 +836,6 @@ function finishExam() {
   
   showView("viewReport");
   
-  // Calculate average overall score
   let sumOverall = 0, sumFluency = 0, sumVocab = 0, sumGrammar = 0, sumRel = 0;
   const count = state.answers.length || 1;
   
@@ -773,7 +855,6 @@ function finishExam() {
   
   const level = calculateOPIcLevel(avgOverall);
   
-  // Render Summary
   dom.finalOPIcLevel.textContent = level.code;
   dom.finalLevelTitle.textContent = level.title;
   dom.reportAvgScore.textContent = `${avgOverall} / 5.0`;
@@ -784,7 +865,6 @@ function finishExam() {
   const elapsedSecs = totalElapsed % 60;
   dom.reportTimeSpent.textContent = `${elapsedMins}m ${elapsedSecs}s`;
   
-  // Render 4 Criteria
   dom.scoreFluency.textContent = `${avgFluency} / 5.0`;
   dom.barFluency.style.width = `${(avgFluency / 5) * 100}%`;
   
@@ -797,7 +877,6 @@ function finishExam() {
   dom.scoreRelevance.textContent = `${avgRel} / 5.0`;
   dom.barRelevance.style.width = `${(avgRel / 5) * 100}%`;
   
-  // Render breakdown list
   dom.breakdownList.innerHTML = "";
   state.answers.forEach((ans) => {
     const item = document.createElement("div");
@@ -835,6 +914,7 @@ dom.btnRetakeExam.addEventListener("click", () => {
   showView("viewSurvey");
 });
 
-// Init on Page Load
-renderSurveyTopics();
-
+// Initialize on Load
+loadAllQuestions().then(() => {
+  renderSurveyTopics();
+});
