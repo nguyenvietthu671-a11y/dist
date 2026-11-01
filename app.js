@@ -173,62 +173,66 @@ const SURVEY_DEFINITIONS = {
 // Mapping from survey activities to question bank topics
 const SURVEY_TOPIC_MAP = {
   // Part 1
-  "Business / Corporation": ["Workplace", "Appointment"],
-  "Home Business": ["Workplace"],
-  "Teacher / Educator": ["Workplace"],
+  "Business / Corporation": ["Work", "Appointment"],
+  "Home Business": ["Work"],
+  "Teacher / Educator": ["Work"],
   
   // Part 2
-  "College or university to earn a degree": ["School", "Library"],
-  "Language classes": ["School"],
+  "College or university to earn a degree": ["Work", "Culture"],
+  "Language classes": ["Communication"],
   
   // Part 3
-  "I live alone in a house or an apartment.": ["House", "Housework", "Furniture", "Neighbor"],
-  "I live with family members in a house or an apartment.": ["House", "Housework", "Neighbor"],
-  "I live with non-family members in a house or an apartment.": ["House", "Neighbor"],
-  "I live in a school dormitory.": ["House", "Neighbor"],
+  "I live alone in a house or an apartment.": ["Housing", "Housing_1", "Furniture"],
+  "I live with family members in a house or an apartment.": ["Housing", "Family_Friends", "Housing_1"],
+  "I live with non-family members in a house or an apartment.": ["Housing", "Housing_1"],
+  "I live in a school dormitory.": ["Housing"],
+  "I live in military barracks.": ["Housing"],
   
   // Part 4 Activities
-  "go to the movies": ["Movie", "Cinema"],
-  "go to clubs/nightclubs": ["Bar"],
-  "go to the theater": ["Movie", "Cinema"],
-  "go to concerts": ["Concert"],
-  "go to museums": ["Building"],
-  "go to parks": ["Park"],
-  "watch TV": ["TV"],
-  "go camping": ["Camp"],
-  "go to the beach": ["Beach"],
-  "go shopping": ["Shopping", "Grocery"],
+  "go to the movies": ["Movies"],
+  "go to clubs/nightclubs": ["Bars"],
+  "go to the theater": ["Movies", "Culture"],
+  "go to concerts": ["Music"],
+  "go to museums": ["Culture", "Geography"],
+  "go to parks": ["Parks"],
+  "watch TV": ["Television"],
+  "go camping": ["Free_Time"],
+  "go to the beach": ["Beaches"],
+  "go shopping": ["Shopping"],
   
   // Part 4 Hobbies
+  "read to children": ["Family_Friends"],
   "listen to music": ["Music"],
   "play a musical instrument": ["Music"],
   "sing alone": ["Music"],
   "sing with a group": ["Music"],
-  "take dance class/lessons": ["Dance"],
-  "go out dancing": ["Dance"],
-  "cook": ["Cooking"],
-  "have pets": ["Pet"],
+  "take dance class/lessons": ["Culture"],
+  "go out dancing": ["Bars"],
+  "cook": ["Food"],
+  "have pets": ["Family_Friends"],
+  "read or listen to news": ["Newspapers"],
   
   // Part 4 Sports
-  "swim": ["Swimming"],
-  "bike": ["Bicycle"],
-  "jog": ["Jogging"],
+  "swim": ["Health"],
+  "bike": ["Transportation", "Health"],
+  "jog": ["Walking", "Health"],
   "walk": ["Walking"],
-  "go to a health club or gym": ["Gym"],
+  "go to a health club or gym": ["Health"],
+  "exercise": ["Health"],
   
   // Part 4 Travel
-  "travel for business domestically": ["Business_Trip"],
-  "travel for business internationally": ["Travel_Overseas"],
-  "stay at home for vacation": ["Stay_at_Home"],
-  "take vacation domestically": ["Travel_Domestic"],
-  "take vacation internationally": ["Travel_Overseas"],
+  "travel for business domestically": ["Domestic_Trips", "Work"],
+  "travel for business internationally": ["Overseas_Trips", "Work"],
+  "stay at home for vacation": ["Vacations_at_Home"],
+  "take vacation domestically": ["Domestic_Trips"],
+  "take vacation internationally": ["Overseas_Trips"],
   
   // Part 5
   "Environment": ["Environment", "Recycling", "Weather"],
-  "Human Rights": ["News", "Society"],
-  "Global Workplace": ["Industry", "Workplace"],
-  "Social Culture": ["Social_Media", "Holiday"],
-  "Communication": ["Communication", "Phone", "Internet", "Technology"]
+  "Human Rights": ["Human_Rights", "Culture"],
+  "Global Workplace": ["Work", "Industry"],
+  "Social Culture": ["Culture", "Holidays", "Fashion"],
+  "Communication": ["Communication", "Phones", "Internet", "Technology", "Text_Messages"]
 };
 
 // Fallback core bank (if assets/questions_all.json is loading or offline)
@@ -446,7 +450,8 @@ async function loadAllQuestions() {
   try {
     const res = await fetch("assets/questions_all.json");
     if (!res.ok) throw new Error("assets/questions_all.json not found");
-    state.allQuestions = await res.json();
+    const rawData = await res.json();
+    state.allQuestions = Array.isArray(rawData) ? rawData : (rawData.questions || []);
   } catch (err) {
     console.warn("Falling back to core bank:", err);
     state.allQuestions = [...EMBEDDED_CORE_BANK];
@@ -1096,13 +1101,12 @@ function getRandomFromList(list) {
 
 function generateExamSet() {
   const mappedTopics = getSurveyMappedTopics();
-  const trackCatalog = TOPICS_CATALOG[state.track] || TOPICS_CATALOG.al;
-  const usableTopics = mappedTopics.filter(t => trackCatalog.includes(t));
+  let usableTopics = mappedTopics.filter(t => state.questionsByTopic[t] && state.questionsByTopic[t].length > 0);
+  
   if (usableTopics.length < 5) {
-    trackCatalog.forEach(t => {
-      if (!t.startsWith("Roleplay_") && t !== "Introduction" && !usableTopics.includes(t)) {
-        usableTopics.push(t);
-      }
+    const defaults = ["Housing", "Movies", "Music", "Parks", "Shopping", "Food", "Domestic_Trips", "Weather"];
+    defaults.forEach(t => {
+      if (!usableTopics.includes(t) && state.questionsByTopic[t]) usableTopics.push(t);
     });
   }
 
@@ -1117,33 +1121,34 @@ function generateExamSet() {
   // Combos 1 to 3 (Q2 - Q10): General & Survey Combos (3 questions each)
   for (let c = 0; c < 3; c++) {
     const topic = shuffledTopics[c % shuffledTopics.length];
-    const pool = state.questionsByTopic[topic] || [];
-    const standardQuestions = pool.filter(q => !q.roleplay);
+    const pool = (state.questionsByTopic[topic] || []).filter(q => !q.roleplay);
     
     // Pick 3 questions or fill
     for (let k = 0; k < 3; k++) {
-      if (standardQuestions[k]) {
-        selectedSet.push(standardQuestions[k]);
+      if (pool[k]) {
+        selectedSet.push(pool[k]);
       } else {
-        // Fallback to random question in bank
-        const fallback = getRandomFromList(state.allQuestions.filter(q => !q.roleplay && q.topic !== "Introduction")) || standardQuestions[0];
+        const fallback = getRandomFromList(state.allQuestions.filter(q => !q.roleplay && q.topic !== "Introduction")) || pool[0];
         selectedSet.push(fallback);
       }
     }
   }
 
-  // Combo 4 (Q11 - Q13): Roleplay Combo (3 questions: 90s, 90s, 120s)
-  const roleplayTopics = trackCatalog.filter(t => t.startsWith("Roleplay_"));
-  const chosenRoleplay = getRandomFromList(roleplayTopics) || "Roleplay_Appointment";
-  const rpPool = state.questionsByTopic[chosenRoleplay] || [];
-  for (let k = 0; k < 3; k++) {
-    if (rpPool[k]) {
-      selectedSet.push(rpPool[k]);
-    } else {
-      const anyRp = getRandomFromList(state.allQuestions.filter(q => q.roleplay)) || selectedSet[1];
-      selectedSet.push(anyRp);
-    }
-  }
+  // Combo 4 (Q11 - Q13): Coherent Roleplay Scenario (3 questions: Q11 Ask, Q12 Resolve, Q13 Memory)
+  const q11Pool = state.questionsByTopic["Roleplay_Ask_Question"] || [];
+  const q12Pool = state.questionsByTopic["Roleplay_Resolve_Problems"] || [];
+  const q13Pool = state.questionsByTopic["Roleplay_Describe_Memory"] || [];
+
+  const scenarios = [...new Set(q11Pool.map(q => q.qid ? q.qid.replace(/-q11$/, '') : ''))].filter(Boolean);
+  const chosenScenario = getRandomFromList(scenarios);
+
+  let rp11 = q11Pool.find(q => q.qid === `${chosenScenario}-q11`) || getRandomFromList(q11Pool);
+  let rp12 = q12Pool.find(q => q.qid === `${chosenScenario}-q12`) || getRandomFromList(q12Pool);
+  let rp13 = q13Pool.find(q => q.qid === `${chosenScenario}-q13`) || getRandomFromList(q13Pool);
+
+  selectedSet.push(rp11 || selectedSet[1]);
+  selectedSet.push(rp12 || selectedSet[2]);
+  selectedSet.push(rp13 || selectedSet[3]);
 
   // Combo 5 (Q14 - Q15): Advanced Issues / Social Trends / Comparison
   const p5Topics = Array.from(state.surveyAnswers.topics);
@@ -1152,10 +1157,13 @@ function generateExamSet() {
     if (SURVEY_TOPIC_MAP[top]) SURVEY_TOPIC_MAP[top].forEach(t => p5Mapped.push(t));
   });
 
-  const finalPoolTopics = p5Mapped.length > 0 ? p5Mapped : ["Environment", "Social_Media", "Technology"];
+  const finalPoolTopics = p5Mapped.filter(t => state.questionsByTopic[t]);
+  const fallbackP5 = ["Environment", "Technology", "Recycling", "Industry", "Culture"];
+  const chosenP5 = finalPoolTopics.length >= 2 ? finalPoolTopics : fallbackP5;
+
   for (let k = 0; k < 2; k++) {
-    const topic = finalPoolTopics[k % finalPoolTopics.length];
-    const pool = state.questionsByTopic[topic] || [];
+    const topic = chosenP5[k % chosenP5.length];
+    const pool = (state.questionsByTopic[topic] || []).filter(q => !q.roleplay);
     const q = pool[pool.length - 1] || getRandomFromList(state.allQuestions.filter(q => !q.roleplay)) || selectedSet[2];
     selectedSet.push(q);
   }
