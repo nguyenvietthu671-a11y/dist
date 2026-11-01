@@ -1,6 +1,6 @@
 /**
  * OPIc AI Simulator - Complete Reverse-Engineered Core Logic
- * Fully Synchronized with English OPIc Test's 48 Topics & 578 Questions Bank
+ * Fully Accessible (WCAG 2.1 / 2.2 AA) & Responsive
  */
 
 // --- 1. FULL TOPIC CATALOG (Extracted from REA) ---
@@ -87,22 +87,18 @@ const state = {
   allQuestions: [],
   questionsByTopic: {},
   
-  // Current active 15 questions for the exam
   examQuestions: [],
   currentIndex: 0,
   
-  // Question test state: "initial" | "questionPlaying" | "recording" | "recordingEnded"
   examState: "initial",
   hasReplayed: false,
   speakingSecondsRemaining: 120,
   maxQuestionSeconds: 120,
   speakingTimerInterval: null,
   
-  // Total exam timer
   totalSecondsRemaining: 1800, // 30 minutes
   totalTimerInterval: null,
   
-  // Audio & Recording handles
   audioPlayer: null,
   mediaRecorder: null,
   audioChunks: [],
@@ -111,11 +107,9 @@ const state = {
   analyser: null,
   animFrameId: null,
   
-  // Live Speech Recognition
   speechRecognizer: null,
   currentTranscript: "",
   
-  // Collected results
   answers: []
 };
 
@@ -141,6 +135,7 @@ const dom = {
   testAudioElement: document.getElementById("testAudioElement"),
   btnTestMic: document.getElementById("btnTestMic"),
   meterBar: document.getElementById("meterBar"),
+  micMeter: document.getElementById("micMeter"),
   micStatusText: document.getElementById("micStatusText"),
   btnBackToSurvey: document.getElementById("btnBackToSurvey"),
   btnStartExam: document.getElementById("btnStartExam"),
@@ -160,6 +155,7 @@ const dom = {
   liveVisualizer: document.getElementById("liveVisualizer"),
   speakingTimerLabel: document.getElementById("speakingTimerLabel"),
   speakingTimerDigits: document.getElementById("speakingTimerDigits"),
+  timerProgressTrack: document.getElementById("timerProgressTrack"),
   timerProgressFill: document.getElementById("timerProgressFill"),
   btnNextQuestion: document.getElementById("btnNextQuestion"),
   
@@ -171,17 +167,21 @@ const dom = {
   reportAvgScore: document.getElementById("reportAvgScore"),
   scoreFluency: document.getElementById("scoreFluency"),
   barFluency: document.getElementById("barFluency"),
+  progFluency: document.getElementById("progFluency"),
   scoreVocabulary: document.getElementById("scoreVocabulary"),
   barVocabulary: document.getElementById("barVocabulary"),
+  progVocab: document.getElementById("progVocab"),
   scoreGrammar: document.getElementById("scoreGrammar"),
   barGrammar: document.getElementById("barGrammar"),
+  progGrammar: document.getElementById("progGrammar"),
   scoreRelevance: document.getElementById("scoreRelevance"),
   barRelevance: document.getElementById("barRelevance"),
+  progRelevance: document.getElementById("progRelevance"),
   breakdownList: document.getElementById("breakdownList"),
   btnRetakeExam: document.getElementById("btnRetakeExam")
 };
 
-// --- 4. DATA LOADING (Fetch 578 Questions Bank) ---
+// --- 4. DATA LOADING (578 Questions Bank) ---
 async function loadAllQuestions() {
   try {
     const res = await fetch("assets/questions_all.json");
@@ -193,7 +193,6 @@ async function loadAllQuestions() {
     state.allQuestions = [...EMBEDDED_CORE_BANK];
   }
   
-  // Group questions by topic for instant access
   state.questionsByTopic = {};
   state.allQuestions.forEach(q => {
     if (!state.questionsByTopic[q.topic]) {
@@ -205,29 +204,41 @@ async function loadAllQuestions() {
   console.log(`Loaded ${state.allQuestions.length} questions across ${Object.keys(state.questionsByTopic).length} topics.`);
 }
 
-// --- 5. NAVIGATION & VIEW SWITCHING ---
+// --- 5. PROGRAMMATIC VIEW SWITCHING & FOCUS MANAGEMENT (WCAG 2.4.3) ---
 function showView(viewId) {
-  [dom.viewSurvey, dom.viewDeviceCheck, dom.viewExam, dom.viewReport].forEach(v => v.classList.remove("active"));
-  document.getElementById(viewId).classList.add("active");
+  [dom.viewSurvey, dom.viewDeviceCheck, dom.viewExam, dom.viewReport].forEach(v => {
+    v.classList.remove("active");
+    v.removeAttribute("tabindex");
+  });
+  
+  const targetView = document.getElementById(viewId);
+  targetView.classList.add("active");
+  targetView.setAttribute("tabindex", "-1");
+  targetView.focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- 6. SURVEY VIEW INITIALIZATION ---
+// --- 6. KEYBOARD-ACCESSIBLE TOPIC CHIPS RENDERING (WCAG 2.1.1, 2.4.7) ---
 function renderSurveyTopics() {
   const topics = TOPICS_CATALOG[state.track] || TOPICS_CATALOG.al;
   dom.topicsGrid.innerHTML = "";
   
   topics.forEach(t => {
-    // Hide pure internal roleplay topics from user survey checkbox selection
     if (t.startsWith("Roleplay_") || t === "Introduction") return;
     
-    const chip = document.createElement("div");
+    const chip = document.createElement("button");
     const isChecked = state.selectedTopics.has(t);
+    chip.type = "button";
+    chip.setAttribute("role", "checkbox");
+    chip.setAttribute("aria-checked", isChecked ? "true" : "false");
     chip.className = `topic-chip ${isChecked ? 'selected' : ''}`;
+    chip.setAttribute("aria-label", `Chủ đề ${t.replace(/_/g, ' ')}, ${isChecked ? 'Đã chọn' : 'Chưa chọn'}`);
+    
     chip.innerHTML = `
-      <div class="topic-checkbox"></div>
+      <div class="topic-checkbox" aria-hidden="true"></div>
       <span class="topic-name">${t.replace(/_/g, ' ')}</span>
     `;
+    
     chip.addEventListener("click", () => {
       if (state.selectedTopics.has(t)) {
         state.selectedTopics.delete(t);
@@ -237,6 +248,7 @@ function renderSurveyTopics() {
       renderSurveyTopics();
       updateSurveyButton();
     });
+    
     dom.topicsGrid.appendChild(chip);
   });
   
@@ -246,7 +258,9 @@ function renderSurveyTopics() {
 function updateSurveyButton() {
   const count = state.selectedTopics.size;
   dom.selectedCount.textContent = count;
-  dom.btnConfirmSurvey.disabled = count < 3;
+  const isReady = count >= 3;
+  dom.btnConfirmSurvey.disabled = !isReady;
+  dom.btnConfirmSurvey.setAttribute("aria-disabled", (!isReady).toString());
 }
 
 // Track Radio Listener
@@ -254,7 +268,7 @@ document.querySelectorAll('input[name="trackSelect"]').forEach(radio => {
   radio.addEventListener("change", (e) => {
     state.track = e.target.value;
     dom.currentTrackBadge.textContent = `TRACK: ${state.track.toUpperCase()}`;
-    // Adjust default selections
+    dom.currentTrackBadge.setAttribute("aria-label", `Current Track: ${state.track.toUpperCase()}`);
     if (state.track === "im") {
       state.selectedTopics.delete("Housing_1");
       state.selectedTopics.add("Housing");
@@ -281,6 +295,7 @@ dom.btnTestAudio.addEventListener("click", () => {
     dom.testAudioElement.play().then(() => {
       testAudioPlaying = true;
       dom.btnTestAudio.textContent = "Đang phát âm thanh...";
+      dom.btnTestAudio.setAttribute("aria-label", "Dừng phát âm thanh thử nghiệm");
     }).catch(err => {
       alert("Không thể phát audio: " + err.message);
     });
@@ -289,12 +304,14 @@ dom.btnTestAudio.addEventListener("click", () => {
     dom.testAudioElement.currentTime = 0;
     testAudioPlaying = false;
     dom.btnTestAudio.textContent = "Phát âm thanh thử nghiệm";
+    dom.btnTestAudio.setAttribute("aria-label", "Phát âm thanh thử nghiệm");
   }
 });
 
 dom.testAudioElement.onended = () => {
   testAudioPlaying = false;
   dom.btnTestAudio.textContent = "Phát âm thanh thử nghiệm";
+  dom.btnTestAudio.setAttribute("aria-label", "Phát âm thanh thử nghiệm");
 };
 
 dom.btnTestMic.addEventListener("click", async () => {
@@ -304,8 +321,8 @@ dom.btnTestMic.addEventListener("click", async () => {
     dom.micStatusText.textContent = "✓ Micro đã sẵn sàng!";
     dom.micStatusText.style.color = "#10B981";
     dom.btnStartExam.disabled = false;
+    dom.btnStartExam.setAttribute("aria-disabled", "false");
     
-    // Connect audio meter
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
@@ -320,6 +337,7 @@ dom.btnTestMic.addEventListener("click", async () => {
       let avg = sum / dataArray.length;
       let percent = Math.min(100, Math.round((avg / 128) * 100));
       dom.meterBar.style.width = `${percent}%`;
+      dom.micMeter.setAttribute("aria-valuenow", percent.toString());
       requestAnimationFrame(updateMeter);
     }
     updateMeter();
@@ -333,16 +351,14 @@ dom.btnStartExam.addEventListener("click", () => {
   startExamination();
 });
 
-// --- 8. AUTHENTIC 15-QUESTION TEST SET GENERATOR ---
+// --- 8. 15-QUESTION TEST SET GENERATOR ---
 function generateExamQuestions() {
   const selectedArr = Array.from(state.selectedTopics);
   const exam = [];
   
-  // Helper to pick questions from a topic
   const getFromTopic = (topic, count = 3) => {
     let pool = state.questionsByTopic[topic] || [];
     if (pool.length === 0) {
-      // Fallback search
       pool = state.allQuestions.filter(q => q.topic.toLowerCase().includes(topic.toLowerCase()));
     }
     return pool.slice(0, count);
@@ -359,7 +375,7 @@ function generateExamQuestions() {
     audio_remote: introQ.audio_url
   });
   
-  // Combo 1 (Q2-Q4): Topic 1
+  // Combo 1 (Q2-Q4)
   const topic1 = selectedArr[0] || (state.track === "al" ? "Housing_1" : "Housing");
   const combo1 = getFromTopic(topic1, 3);
   for (let i = 0; i < 3; i++) {
@@ -374,7 +390,7 @@ function generateExamQuestions() {
     });
   }
   
-  // Combo 2 (Q5-Q7): Topic 2
+  // Combo 2 (Q5-Q7)
   const topic2 = selectedArr[1] || "Coffee_Shops";
   const combo2 = getFromTopic(topic2, 3);
   for (let i = 0; i < 3; i++) {
@@ -389,7 +405,7 @@ function generateExamQuestions() {
     });
   }
   
-  // Combo 3 (Q8-Q10): Topic 3
+  // Combo 3 (Q8-Q10)
   const topic3 = selectedArr[2] || "Movies";
   const combo3 = getFromTopic(topic3, 3);
   for (let i = 0; i < 3; i++) {
@@ -443,7 +459,7 @@ function generateExamQuestions() {
     audio_remote: q13.audio_url
   });
   
-  // Combo 5 (Q14-Q15): Advanced Trends / Social Issues
+  // Combo 5 (Q14-Q15): Advanced Trends & Society
   const techPool = state.questionsByTopic["Technology"] || [];
   const envPool = state.questionsByTopic["Environment"] || [];
   
@@ -503,11 +519,11 @@ function startTotalTimer() {
     }
     const mins = Math.floor(state.totalSecondsRemaining / 60);
     const secs = state.totalSecondsRemaining % 60;
-    dom.totalTimeDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    dom.totalTimeDisplay.textContent = formatted;
   }, 1000);
 }
 
-// Exact duration calculation matching reverse-engineered Pw()
 function getQuestionDuration(q, track) {
   const index = q.index;
   const type = q.type;
@@ -543,14 +559,15 @@ function loadQuestion(index) {
   state.hasReplayed = false;
   state.currentTranscript = "";
   dom.btnReplay.disabled = false;
+  dom.btnReplay.setAttribute("aria-disabled", "false");
   dom.replayCountText.textContent = "1";
   
   const totalDuration = getQuestionDuration(q, state.track);
   state.speakingSecondsRemaining = totalDuration;
   state.maxQuestionSeconds = totalDuration;
+  dom.timerProgressTrack.setAttribute("aria-valuemax", totalDuration.toString());
   updateSpeakingTimerDisplay(totalDuration, totalDuration);
   
-  // Audio playback setup
   setupAudioSource(q);
   playQuestionPrompt();
 }
@@ -561,7 +578,6 @@ function setupAudioSource(q) {
     if (q.audio_remote) {
       dom.examAudioPlayer.src = q.audio_remote;
     } else {
-      // Fallback to Web Speech Synthesis TTS
       useSpeechFallback(q.text);
     }
   };
@@ -586,9 +602,9 @@ function playQuestionPrompt() {
   dom.promptAudioWaves.classList.add("playing");
   dom.recordingPanel.style.display = "none";
   dom.btnNextQuestion.disabled = true;
+  dom.btnNextQuestion.setAttribute("aria-disabled", "true");
   
   dom.examAudioPlayer.play().catch(() => {
-    // If audio autoplay blocked or file missing, use TTS or advance
     const q = state.examQuestions[state.currentIndex];
     useSpeechFallback(q.text);
   });
@@ -615,6 +631,7 @@ dom.btnReplay.addEventListener("click", () => {
   if (state.hasReplayed) return;
   state.hasReplayed = true;
   dom.btnReplay.disabled = true;
+  dom.btnReplay.setAttribute("aria-disabled", "true");
   dom.replayCountText.textContent = "0";
   
   stopRecording();
@@ -628,8 +645,10 @@ async function startRecordingAnswer() {
   dom.examStateText.textContent = "Your turn to speak (Recording)";
   dom.recordingPanel.style.display = "flex";
   dom.btnNextQuestion.disabled = false;
+  dom.btnNextQuestion.setAttribute("aria-disabled", "false");
   
   dom.btnReplay.disabled = true;
+  dom.btnReplay.setAttribute("aria-disabled", "true");
   
   state.audioChunks = [];
   try {
@@ -673,6 +692,7 @@ function updateSpeakingTimerDisplay(remaining, total) {
   
   const percent = Math.max(0, Math.min(100, (remaining / total) * 100));
   dom.timerProgressFill.style.width = `${percent}%`;
+  dom.timerProgressTrack.setAttribute("aria-valuenow", remaining.toString());
   
   if (remaining <= 15) {
     dom.speakingTimerDigits.classList.add("urgent");
@@ -817,7 +837,7 @@ function generateFeedback(q, score) {
   }
 }
 
-// Exact Reverse-Engineered Level Threshold Function: bcl(score)
+// Exact Level Threshold Function: bcl(score)
 function calculateOPIcLevel(score) {
   if (score < 0.5) return { code: "NL", title: "Novice Low" };
   if (score < 1.0) return { code: "NM", title: "Novice Mid" };
@@ -856,6 +876,7 @@ function finishExam() {
   const level = calculateOPIcLevel(avgOverall);
   
   dom.finalOPIcLevel.textContent = level.code;
+  dom.finalOPIcLevel.setAttribute("aria-label", `Level: ${level.code} - ${level.title}`);
   dom.finalLevelTitle.textContent = level.title;
   dom.reportAvgScore.textContent = `${avgOverall} / 5.0`;
   dom.reportTotalAnswers.textContent = `${state.answers.length} / 15`;
@@ -865,26 +886,31 @@ function finishExam() {
   const elapsedSecs = totalElapsed % 60;
   dom.reportTimeSpent.textContent = `${elapsedMins}m ${elapsedSecs}s`;
   
+  // Progressbars updates with ARIA
   dom.scoreFluency.textContent = `${avgFluency} / 5.0`;
   dom.barFluency.style.width = `${(avgFluency / 5) * 100}%`;
+  dom.progFluency.setAttribute("aria-valuenow", avgFluency.toString());
   
   dom.scoreVocabulary.textContent = `${avgVocab} / 5.0`;
   dom.barVocabulary.style.width = `${(avgVocab / 5) * 100}%`;
+  dom.progVocab.setAttribute("aria-valuenow", avgVocab.toString());
   
   dom.scoreGrammar.textContent = `${avgGrammar} / 5.0`;
   dom.barGrammar.style.width = `${(avgGrammar / 5) * 100}%`;
+  dom.progGrammar.setAttribute("aria-valuenow", avgGrammar.toString());
   
   dom.scoreRelevance.textContent = `${avgRel} / 5.0`;
   dom.barRelevance.style.width = `${(avgRel / 5) * 100}%`;
+  dom.progRelevance.setAttribute("aria-valuenow", avgRel.toString());
   
   dom.breakdownList.innerHTML = "";
   state.answers.forEach((ans) => {
-    const item = document.createElement("div");
+    const item = document.createElement("article");
     item.className = "breakdown-item";
     item.innerHTML = `
       <div class="breakdown-item-header">
-        <span class="item-q-title">Question ${ans.index}: ${ans.topic}</span>
-        <span class="item-score-pill">Score: ${ans.overall} / 5.0</span>
+        <h3 class="item-q-title">Question ${ans.index}: ${ans.topic}</h3>
+        <span class="item-score-pill" aria-label="Điểm số: ${ans.overall} trên 5.0">Score: ${ans.overall} / 5.0</span>
       </div>
       <div class="item-transcript"><strong>Transcript:</strong> "${ans.transcript}"</div>
       <div class="item-feedback"><strong>AI Feedback:</strong> ${ans.feedback}</div>
@@ -893,11 +919,14 @@ function finishExam() {
   });
 }
 
-// Toggle Practice Mode Transcript
+// Accessible Transcript Disclosure Toggle (WCAG 4.1.2)
 dom.btnToggleTranscript.addEventListener("click", () => {
   const isHidden = dom.transcriptBox.style.display === "none";
   dom.transcriptBox.style.display = isHidden ? "block" : "none";
-  dom.btnToggleTranscript.textContent = isHidden ? "🙈 Ẩn gợi ý đề bài" : "👁️ Hiển thị gợi ý đề bài (Practice Mode)";
+  dom.btnToggleTranscript.setAttribute("aria-expanded", isHidden ? "true" : "false");
+  dom.btnToggleTranscript.innerHTML = isHidden 
+    ? '<span aria-hidden="true">🙈</span> Ẩn gợi ý đề bài' 
+    : '<span aria-hidden="true">👁️</span> Hiển thị gợi ý đề bài (Practice Mode)';
 });
 
 // Restart & Retake
